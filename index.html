@@ -254,7 +254,14 @@
       var ff=(r.fecha||'').trim();r._fecha=(ff&&ff.indexOf('(Fecha)')<0)?ff:(r.anio||(y?y[0]:''));
       r._hay=norm([r.nombre,r.album,r.grupo,r.servicio,r.sede,r.evento,r.tipoEvento,r.tipo,r.estado,r._fecha,r._year].join(' '));
     });
-      ALL.sort(function(a,b){return String(b._fecha||'').localeCompare(String(a._fecha||''));});
+      // Orden: primero lo que se registró más recientemente (llega arriba solo, no hay que fijarlo a mano).
+      // fechaRegistro = fecha en que el script lo metió a Airtable (no la fecha del evento).
+      // Si dos archivos se registraron el mismo día, se desempata por la fecha del evento.
+      ALL.sort(function(a,b){
+        var ra=a.fechaRegistro||'', rb=b.fechaRegistro||'';
+        if(ra!==rb) return rb.localeCompare(ra);
+        return String(b._fecha||'').localeCompare(String(a._fecha||''));
+      });
       apply();
       if(!filtrosListos){filtrosListos=true;if(restoreFiltros())apply();}}
 
