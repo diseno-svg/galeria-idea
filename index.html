@@ -453,8 +453,6 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
     var a=document.createElement('a');
     a.href=url;
     a.download='';
-    a.rel='noopener';
-    a.target='_blank';
     document.body.appendChild(a);
     a.click();
     a.remove();
