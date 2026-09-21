@@ -207,6 +207,7 @@
   var DATOS_URL='https://www.googleapis.com/drive/v3/files/1eURdGqo8-mjYhzMJttVHpCFgzEoa-hd1?alt=media&key=AIzaSyDG8OEUiJTqQdNck1NJZhOpD36Q1VBaAyQ';
 
   var ALL=[], VIEW=[], curIndex=-1, CAL=[], calBuilt=false;
+  var FILT_LS_KEY='galeriaFiltrosV1', filtrosListos=false;
 
   function cargarDatos(cb){
     fetch(DATOS_URL,{cache:'no-store'}).then(function(r){
@@ -249,7 +250,33 @@
       r._hay=norm([r.nombre,r.album,r.grupo,r.servicio,r.sede,r.evento,r.tipoEvento,r.tipo,r.estado,r._fecha,r._year].join(' '));
     });
       ALL.sort(function(a,b){return String(b._fecha||'').localeCompare(String(a._fecha||''));});
-      apply();}
+      apply();
+      if(!filtrosListos){filtrosListos=true;if(restoreFiltros())apply();}}
+
+    function saveFiltros(){
+      try{
+        var s={q:document.getElementById('q').value};
+        FKEYS.forEach(function(p){s[p[0]]=document.getElementById(p[0]).value;});
+        localStorage.setItem(FILT_LS_KEY,JSON.stringify(s));
+      }catch(e){}
+    }
+    function restoreFiltros(){
+      try{
+        var raw=localStorage.getItem(FILT_LS_KEY);
+        if(!raw)return false;
+        var s=JSON.parse(raw);
+        var changed=false;
+        if(s.q){document.getElementById('q').value=s.q;changed=true;}
+        FKEYS.forEach(function(p){
+          var v=s[p[0]];if(!v)return;
+          var sel=document.getElementById(p[0]);
+          for(var i=0;i<sel.options.length;i++){
+            if(sel.options[i].value===v){sel.value=v;changed=true;break;}
+          }
+        });
+        return changed;
+      }catch(e){return false;}
+    }
 
     function tokens(){return norm(document.getElementById('q').value).split(/\s+/).filter(Boolean);}
 
@@ -294,7 +321,8 @@
       VIEW=ALL.filter(function(r){return passes(r,null);});
       document.getElementById('count').textContent=(VIEW.length===ALL.length)
         ?(ALL.length+' archivos'):(VIEW.length+' de '+ALL.length+' archivos');
-      renderChips();render();}
+      renderChips();render();
+      if(filtrosListos)saveFiltros();}
 
     function val(id){return document.getElementById(id).value;}
 
@@ -362,7 +390,7 @@
     var esFotos=(r.enlace||'').indexOf('photos.google.com')>=0;
     var accionesHtml='<div class="lb-actions">'+(esFotos?'':'<button class="btn primary" onclick="dlOne(\''+id+'\')">⬇ Descargar</button>')+
         '<a class="btn '+(esFotos?'primary':'ghost')+'" href="'+esc(r.enlace)+'" target="_blank">'+
-        (esFotos?'🖼 Abrir álbum en Google Fotos':'📁 Abrir en Drive')+'</a></div>';
+        (esFotos?'🖼 Ver álbum completo en Google Fotos':'📁 Abrir en Drive')+'</a></div>';
     side.classList.remove('expanded');
     side.innerHTML='<h3>'+esc(r.nombre)+'</h3><div class="sub">'+esc(r.album||'')+'</div>'+accionesHtml
       +'<button class="lb-toggle" id="lbtoggle">▾ Ver detalles</button>'
