@@ -96,7 +96,6 @@
   .lb.show{display:grid}
   .lb-stage{position:relative;display:grid;place-items:center;padding:24px;overflow:auto}
   .lb-stage img,.lb-stage video{max-width:100%;max-height:calc(100dvh - 48px);border-radius:10px;object-fit:contain;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-  .lb-video{width:100%;height:calc(100dvh - 48px);border:0;border-radius:10px;background:#000;display:block;box-shadow:0 20px 60px rgba(0,0,0,.6)}
   .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;
     background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;display:grid;place-items:center}
   .lb-nav:hover{background:rgba(255,255,255,.22)}
@@ -140,7 +139,6 @@
     .lb{grid-template-columns:1fr}
     .lb-stage{padding:10px;padding-bottom:150px}
     .lb-stage img,.lb-stage video{max-height:calc(100dvh - 160px)}
-    .lb-video{height:calc(100dvh - 170px)}
     .lb-side{display:block;position:fixed;left:0;right:0;bottom:0;max-height:none;overflow-y:visible;
       background:rgba(20,23,29,.98);border-top:1px solid var(--line);border-radius:16px 16px 0 0;
       padding:10px 18px calc(12px + env(safe-area-inset-bottom))}
@@ -211,7 +209,8 @@
   // Apps Script escribe un JSON con el mismo contenido en un archivo público de
   // Drive cada 15 minutos, y esta página lo lee con fetch() usando una API key
   // de Google restringida a Drive API + este dominio.
-  var DATOS_URL='https://www.googleapis.com/drive/v3/files/1eURdGqo8-mjYhzMJttVHpCFgzEoa-hd1?alt=media&key=AIzaSyDG8OEUiJTqQdNck1NJZhOpD36Q1VBaAyQ';
+  var DRIVE_API_KEY='AIzaSyDG8OEUiJTqQdNck1NJZhOpD36Q1VBaAyQ';
+  var DATOS_URL='https://www.googleapis.com/drive/v3/files/1eURdGqo8-mjYhzMJttVHpCFgzEoa-hd1?alt=media&key='+DRIVE_API_KEY;
   // Dispara el registro Drive → Airtable a demanda (en vez de esperar la corrida horaria).
   // El JSON que lee esta página se regenera aparte cada 15 min, así que tras sincronizar
   // puede tardar unos minutos más en verse reflejado aquí.
@@ -395,7 +394,20 @@
     var id=r.driveId;
     if(r.tipo==='Video'){
       stage.className='';
-      stage.innerHTML='<iframe class="lb-video" src="https://drive.google.com/file/d/'+id+'/preview" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>';
+      stage.innerHTML='';
+      // Video nativo (no el iframe /preview de Drive): la API de Drive sí soporta
+      // peticiones Range para alt=media, así que el <video> del navegador puede
+      // transmitirlo y buscar (seek) directo, con los controles nativos de una
+      // sola capa — sin el doble reproductor ni los problemas de pantalla completa
+      // del iframe de Drive.
+      var vid=document.createElement('video');
+      vid.controls=true;
+      vid.playsInline=true;
+      vid.setAttribute('webkit-playsinline','');
+      vid.preload='metadata';
+      vid.poster='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600';
+      vid.src='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;
+      stage.appendChild(vid);
     } else {
       var url='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600';
       var img=document.createElement('img');
