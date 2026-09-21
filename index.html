@@ -443,9 +443,21 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
 
   function dlOne(id){
     toast('Descargando…');
-    var f=document.getElementById('dlframe');
-    if(!f){f=document.createElement('iframe');f.id='dlframe';f.style.display='none';document.body.appendChild(f);}
-    f.src='https://drive.google.com/uc?export=download&id='+encodeURIComponent(id);
+    // Antes usaba un iframe oculto con el link viejo uc?export=download, que
+    // en varios casos (archivos grandes, iOS Safari) no descarga nada porque
+    // Drive muestra una interstitial de "no se puede escanear por virus" que
+    // el iframe oculto no puede aceptar. Usamos en su lugar el mismo endpoint
+    // de la API de Drive v3 (alt=media) que ya usa el reproductor de video:
+    // responde directo con content-disposition: attachment, sin interstitial.
+    var url='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='';
+    a.rel='noopener';
+    a.target='_blank';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
   document.getElementById('lbside').addEventListener('click',function(e){
