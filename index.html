@@ -8,7 +8,7 @@
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
     --text:#e8eaed; --muted:#9aa0aa; --accent:#4f8cff; --accent2:#3a6fd8;
-    --green:#22c55e; --red:#ef4444; --amber:#f59e0b; --radius:14px;
+    --green:#22c55e; --red:#ef4444; --amber:#f59e0b; --radius:14px; --gcols:2;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
@@ -95,7 +95,8 @@
     grid-template-columns:1fr 320px}
   .lb.show{display:grid}
   .lb-stage{position:relative;display:grid;place-items:center;padding:24px;overflow:auto}
-  .lb-stage img,.lb-stage video{max-width:100%;max-height:calc(100vh - 48px);border-radius:10px;object-fit:contain;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .lb-stage img,.lb-stage video{max-width:100%;max-height:calc(100dvh - 48px);border-radius:10px;object-fit:contain;background:#000;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .lb-video{width:100%;height:calc(100dvh - 48px);border:0;border-radius:10px;background:#000;display:block;box-shadow:0 20px 60px rgba(0,0,0,.6)}
   .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;
     background:rgba(255,255,255,.1);border:none;color:#fff;cursor:pointer;display:grid;place-items:center}
   .lb-nav:hover{background:rgba(255,255,255,.22)}
@@ -133,8 +134,11 @@
     .filters.open{display:flex}
     .filters select{flex:1 1 46%}
     .ftoggle{display:inline-flex}
+    .grid{grid-template-columns:repeat(var(--gcols),1fr);gap:8px}
     .lb{grid-template-columns:1fr}
     .lb-stage{padding:10px;padding-bottom:150px}
+    .lb-stage img,.lb-stage video{max-height:calc(100dvh - 160px)}
+    .lb-video{height:calc(100dvh - 170px)}
     .lb-side{display:block;position:fixed;left:0;right:0;bottom:0;max-height:none;overflow-y:visible;
       background:rgba(20,23,29,.98);border-top:1px solid var(--line);border-radius:16px 16px 0 0;
       padding:10px 18px calc(12px + env(safe-area-inset-bottom))}
@@ -389,7 +393,7 @@
     var id=r.driveId;
     if(r.tipo==='Video'){
       stage.className='';
-      stage.innerHTML='<iframe src="https://drive.google.com/file/d/'+id+'/preview" allow="autoplay; fullscreen" allowfullscreen style="width:100%;height:calc(100vh - 48px);border:0;border-radius:10px;background:#000"></iframe>';
+      stage.innerHTML='<iframe class="lb-video" src="https://drive.google.com/file/d/'+id+'/preview" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>';
     } else {
       var url='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600';
       var img=document.createElement('img');
@@ -456,6 +460,37 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
         else if(dx>0&&curIndex>0)openLB(curIndex-1);
       }
     },{passive:true});
+  })();
+
+  // ── Pellizcar para acercar/alejar la cuadrícula (móvil, como la app Fotos) ──
+  (function(){
+    var GCOLS_MIN=2, GCOLS_MAX=6, GCOLS_KEY='galeriaGColsV1';
+    var gcols=parseInt(localStorage.getItem(GCOLS_KEY),10);
+    if(!gcols||gcols<GCOLS_MIN||gcols>GCOLS_MAX)gcols=2;
+    function setGCols(n){
+      n=Math.max(GCOLS_MIN,Math.min(GCOLS_MAX,n));
+      if(n===gcols)return;
+      gcols=n;
+      document.documentElement.style.setProperty('--gcols',gcols);
+      try{localStorage.setItem(GCOLS_KEY,gcols);}catch(e){}
+    }
+    document.documentElement.style.setProperty('--gcols',gcols);
+    var main=document.getElementById('main');
+    if(!main)return;
+    var startDist=0,startCols=gcols,pinching=false;
+    function dist(t){var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy);}
+    main.addEventListener('touchstart',function(e){
+      if(e.touches.length===2){pinching=true;startDist=dist(e.touches);startCols=gcols;}
+      else pinching=false;
+    },{passive:true});
+    main.addEventListener('touchmove',function(e){
+      if(!pinching||e.touches.length!==2||!startDist)return;
+      var ratio=dist(e.touches)/startDist;
+      // separar dedos (ratio>1) = acercar = menos columnas; juntar dedos (ratio<1) = alejar = más columnas
+      var delta=Math.round((1-ratio)*6);
+      setGCols(startCols+delta);
+    },{passive:true});
+    main.addEventListener('touchend',function(e){if(e.touches.length<2)pinching=false;},{passive:true});
   })();
 
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
