@@ -162,6 +162,7 @@
     <div class="count" id="count">Cargando…</div>
     <button class="refresh" id="refresh" title="Los datos se actualizan solos cada 15 min; este botón vuelve a leerlos">↻ Actualizar</button>
     <button class="refresh" id="calbtn" title="Ver el calendario semanal de asignaciones">📅 Calendario</button>
+    <button class="refresh" id="syncbtn" title="Busca archivos nuevos en Drive y los registra (1-2 min). Después de esto, el catálogo de la galería puede tardar unos minutos más en actualizarse.">🔄 Sincronizar Drive</button>
     <div class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
       <input id="q" placeholder="Busca todo junto: incendios margarita video…">
@@ -205,6 +206,10 @@
   // Drive cada 15 minutos, y esta página lo lee con fetch() usando una API key
   // de Google restringida a Drive API + este dominio.
   var DATOS_URL='https://www.googleapis.com/drive/v3/files/1eURdGqo8-mjYhzMJttVHpCFgzEoa-hd1?alt=media&key=AIzaSyDG8OEUiJTqQdNck1NJZhOpD36Q1VBaAyQ';
+  // Dispara el registro Drive → Airtable a demanda (en vez de esperar la corrida horaria).
+  // El JSON que lee esta página se regenera aparte cada 15 min, así que tras sincronizar
+  // puede tardar unos minutos más en verse reflejado aquí.
+  var SYNC_URL='https://script.google.com/macros/s/AKfycbyrG0n6aA9xGT6MTiMDLYwG3CD0E5ym5JdFAn89d6jcwludo2uJJem0xgO0q3jSEc72/exec?accion=sincronizar';
 
   var ALL=[], VIEW=[], curIndex=-1, CAL=[], calBuilt=false;
   var FILT_LS_KEY='galeriaFiltrosV1', filtrosListos=false;
@@ -462,6 +467,19 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
       b.disabled=false;b.textContent=old;
       if(err) toast('No se pudo actualizar, intenta de nuevo');
       else toast('Galería actualizada ✓');
+    });
+  };
+  document.getElementById('syncbtn').onclick=function(){
+    var b=this;if(b.disabled)return;b.disabled=true;var old=b.textContent;
+    b.textContent='Sincronizando…';
+    toast('Buscando archivos nuevos en Drive… puede tardar 1-2 min');
+    fetch(SYNC_URL,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+      b.disabled=false;b.textContent=old;
+      if(d && d.ok) toast('Sincronizado ✓ — dale "Actualizar" en unos minutos para verlo aquí');
+      else toast('No se pudo sincronizar'+(d&&d.error?': '+d.error:''));
+    }).catch(function(){
+      b.disabled=false;b.textContent=old;
+      toast('No se pudo sincronizar, intenta de nuevo');
     });
   };
   // ── Calendario semanal ──
