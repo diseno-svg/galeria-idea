@@ -135,6 +135,8 @@
     .filters select{flex:1 1 46%}
     .ftoggle{display:inline-flex}
     .grid{grid-template-columns:repeat(var(--gcols),1fr);gap:8px}
+    body.gcols-dense .card .meta{display:none}
+    body.gcols-dense .card .vtag{padding:2px 5px;font-size:8px;top:3px;left:3px;border-radius:8px}
     .lb{grid-template-columns:1fr}
     .lb-stage{padding:10px;padding-bottom:150px}
     .lb-stage img,.lb-stage video{max-height:calc(100dvh - 160px)}
@@ -464,7 +466,7 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
 
   // ── Pellizcar para acercar/alejar la cuadrícula (móvil, como la app Fotos) ──
   (function(){
-    var GCOLS_MIN=2, GCOLS_MAX=6, GCOLS_KEY='galeriaGColsV1';
+    var GCOLS_MIN=2, GCOLS_MAX=6, GCOLS_DENSE_AT=4, GCOLS_KEY='galeriaGColsV1';
     var gcols=parseInt(localStorage.getItem(GCOLS_KEY),10);
     if(!gcols||gcols<GCOLS_MIN||gcols>GCOLS_MAX)gcols=2;
     function setGCols(n){
@@ -472,9 +474,11 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
       if(n===gcols)return;
       gcols=n;
       document.documentElement.style.setProperty('--gcols',gcols);
+      document.body.classList.toggle('gcols-dense',gcols>=GCOLS_DENSE_AT);
       try{localStorage.setItem(GCOLS_KEY,gcols);}catch(e){}
     }
     document.documentElement.style.setProperty('--gcols',gcols);
+    document.body.classList.toggle('gcols-dense',gcols>=GCOLS_DENSE_AT);
     var main=document.getElementById('main');
     if(!main)return;
     var startDist=0,startCols=gcols,pinching=false;
