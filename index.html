@@ -401,7 +401,23 @@
   }
 
   var io;
-  function observeThumbs(){if(io)io.disconnect();io=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){var c=en.target;io.unobserve(c);loadThumb(c);}});},{rootMargin:'150px'});document.querySelectorAll('.card').forEach(function(c){io.observe(c);});}
+  function observeThumbs(){
+    if(io)io.disconnect();
+    io=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){var c=en.target;io.unobserve(c);loadThumb(c);}});},{rootMargin:'150px'});
+    document.querySelectorAll('.card').forEach(function(c){io.observe(c);});
+    // Red de seguridad: si por lo que sea (el navegador tarda en disparar el
+    // observador con listas grandes, una pestaña en segundo plano, un cambio
+    // de filtro muy seguido) una miniatura se queda "cargando" para siempre,
+    // la forzamos pasado un tiempo prudencial. Usa las tarjetas que existen
+    // en ese momento en la página (nunca una referencia vieja de un filtro
+    // anterior), así que es seguro aunque ya se haya vuelto a filtrar.
+    setTimeout(function(){
+      document.querySelectorAll('.card .ph.spin').forEach(function(ph){
+        var c=ph.closest('.card');
+        if(c)loadThumb(c);
+      });
+    },2500);
+  }
   function loadThumb(card){
     var id=card.getAttribute('data-drive');
     if(!id){setPh(card);return;}
