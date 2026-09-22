@@ -68,7 +68,7 @@
   .qf-btn#qf-fav.active{background:#f5b301;border-color:#f5b301;color:#1a1300}
 
   /* Grupos + grid */
-  main{padding:18px 20px 120px}
+  main{padding:18px 20px 120px;touch-action:pan-y}
   .group-title{margin:22px 0 12px;font-size:15px;font-weight:700;color:var(--text);
     display:flex;align-items:center;gap:10px}
   .group-title span{color:var(--muted);font-weight:500;font-size:13px}
@@ -151,6 +151,7 @@
     .filters.open{display:flex}
     .filters select{flex:1 1 46%}
     .ftoggle{display:inline-flex}
+    .quickfilters.qf-hidden{display:none}
     .grid{grid-template-columns:repeat(var(--gcols),1fr);gap:8px}
     body.gcols-dense .card .meta{display:none}
     body.gcols-dense .card .vtag{padding:2px 5px;font-size:8px;top:3px;left:3px;border-radius:8px}
@@ -405,9 +406,20 @@
     var id=card.getAttribute('data-drive');
     if(!id){setPh(card);return;}
     var url='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w400';
+    tryLoadThumb(card,url,true);
+  }
+  function tryLoadThumb(card,url,allowRetry){
+    // Cuando se filtran muchos archivos a la vez, el navegador dispara muchas
+    // miniaturas casi simultáneas y el endpoint de Drive a veces responde con
+    // error a algunas de ellas (parece un límite de ráfaga, no un problema del
+    // archivo). Reintentamos una vez tras una pequeña espera antes de rendirnos
+    // y mostrar el ícono de "sin vista previa".
     var img=new Image();
     img.onload=function(){setThumb(card,url);};
-    img.onerror=function(){setPh(card);};
+    img.onerror=function(){
+      if(allowRetry){ setTimeout(function(){tryLoadThumb(card,url,false);},900); }
+      else { setPh(card); }
+    };
     img.src=url;
   }
   function setThumb(card,data){var ph=card.querySelector('.ph');if(ph)ph.remove();if(card.querySelector('.thumb'))return;var img=document.createElement('img');img.className='thumb';img.decoding='async';img.src=data;img.loading='lazy';card.insertBefore(img,card.firstChild);}
@@ -554,16 +566,20 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
     var startDist=0,startCols=gcols,pinching=false;
     function dist(t){var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy);}
     main.addEventListener('touchstart',function(e){
-      if(e.touches.length===2){pinching=true;startDist=dist(e.touches);startCols=gcols;}
+      if(e.touches.length===2){pinching=true;startDist=dist(e.touches);startCols=gcols;e.preventDefault();}
       else pinching=false;
-    },{passive:true});
+    },{passive:false});
     main.addEventListener('touchmove',function(e){
       if(!pinching||e.touches.length!==2||!startDist)return;
+      // Evita que el navegador haga su propio zoom de página al mismo tiempo
+      // que este gesto cambia las columnas (si no, el pellizco "hace zoom" y
+      // cambia columnas a la vez, y se siente pesado/errático).
+      e.preventDefault();
       var ratio=dist(e.touches)/startDist;
       // separar dedos (ratio>1) = acercar = menos columnas; juntar dedos (ratio<1) = alejar = más columnas
       var delta=Math.round((1-ratio)*6);
       setGCols(startCols+delta);
-    },{passive:true});
+    },{passive:false});
     main.addEventListener('touchend',function(e){if(e.touches.length<2)pinching=false;},{passive:true});
   })();
 
@@ -574,7 +590,14 @@ function kv(k,v){if(!v)return'';return'<div class="kv"><span class="k">'+k+'</sp
   ['q','f-servicio','f-sede','f-anio','f-estado','f-tipo','f-tipoevento'].forEach(function(id){document.getElementById(id).addEventListener('input',apply);document.getElementById(id).addEventListener('change',apply);});
   document.getElementById('clear').onclick=function(){document.getElementById('q').value='';['f-servicio','f-sede','f-anio','f-estado','f-tipo','f-tipoevento'].forEach(function(id){document.getElementById(id).value='';});apply();};
   var ftbtn=document.getElementById('ftoggle');
-  if(ftbtn)ftbtn.onclick=function(){document.getElementById('filters').classList.toggle('open');};
+  if(ftbtn)ftbtn.onclick=function(){
+    var open=document.getElementById('filters').classList.toggle('open');
+    // En móvil, cuando se abre el panel completo de filtros ya no hace falta
+    // mostrar también la barra de accesos rápidos (Fotos/Video/Favoritos) —
+    // ocultarla ahorra espacio vertical, que era mucho cuando ambas estaban abiertas.
+    var qf=document.getElementById('quickfilters');
+    if(qf)qf.classList.toggle('qf-hidden',open);
+  };
 
   function syncQF(){
     var tipoVal=document.getElementById('f-tipo').value;
