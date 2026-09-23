@@ -449,6 +449,7 @@
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
   <symbol id="i-loader" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></symbol>
   <symbol id="i-photos" viewBox="0 0 24 24"><rect x="6.5" y="3.5" width="14" height="14" rx="2.5"/><path d="M3.5 7v11A2.5 2.5 0 0 0 6 20.5h11"/><circle cx="11" cy="8.5" r="1.5"/><path d="m20.5 13.5-4-4-6.5 8"/></symbol>
+  <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M8 7.5 20 19M8 16.5 20 5M8.6 12 6 9.5M8.6 12 6 14.5"/></symbol>
 </svg>
 
 <header class="hdr" id="hdr">
@@ -476,6 +477,7 @@
       <button class="seg-b active" id="qf-all"><svg class="ic"><use href="#i-grid"/></svg>Todo</button>
       <button class="seg-b" id="qf-foto"><svg class="ic"><use href="#i-image"/></svg>Fotos</button>
       <button class="seg-b" id="qf-video"><svg class="ic"><use href="#i-video"/></svg>Videos</button>
+      <button class="seg-b" id="qf-edit"><svg class="ic"><use href="#i-scissors"/></svg>Editados</button>
       <button class="seg-b" id="qf-fav"><svg class="ic"><use href="#i-star"/></svg>Favoritos</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -1056,15 +1058,23 @@
   $('clear').onclick=clearAll;
 
   function syncQF(){
-    var tipoVal=$('f-tipo').value;
-    $('qf-all').classList.toggle('active',!tipoVal&&!soloFav);
+    var tipoVal=$('f-tipo').value, estadoVal=$('f-estado').value;
+    var editActive=(tipoVal==='Video'&&estadoVal==='Listo');
+    $('qf-all').classList.toggle('active',!tipoVal&&!soloFav&&!estadoVal);
     $('qf-foto').classList.toggle('active',tipoVal==='Foto');
-    $('qf-video').classList.toggle('active',tipoVal==='Video');
+    $('qf-video').classList.toggle('active',tipoVal==='Video'&&!editActive);
+    $('qf-edit').classList.toggle('active',editActive);
     $('qf-fav').classList.toggle('active',soloFav);
   }
-  $('qf-all').onclick=function(){$('f-tipo').value='';soloFav=false;apply();};
-  $('qf-foto').onclick=function(){var s=$('f-tipo');s.value=(s.value==='Foto')?'':'Foto';apply();};
-  $('qf-video').onclick=function(){var s=$('f-tipo');s.value=(s.value==='Video')?'':'Video';apply();};
+  $('qf-all').onclick=function(){$('f-tipo').value='';$('f-estado').value='';soloFav=false;apply();};
+  $('qf-foto').onclick=function(){var s=$('f-tipo');s.value=(s.value==='Foto')?'':'Foto';$('f-estado').value='';apply();};
+  $('qf-video').onclick=function(){var s=$('f-tipo');s.value=(s.value==='Video')?'':'Video';$('f-estado').value='';apply();};
+  $('qf-edit').onclick=function(){
+    var editActive=($('f-tipo').value==='Video'&&$('f-estado').value==='Listo');
+    if(editActive){$('f-tipo').value='';$('f-estado').value='';}
+    else{$('f-tipo').value='Video';$('f-estado').value='Listo';}
+    apply();
+  };
   $('qf-fav').onclick=function(){soloFav=!soloFav;apply();};
   $('brand').onclick=function(){window.scrollTo({top:0,behavior:'smooth'});};
 
