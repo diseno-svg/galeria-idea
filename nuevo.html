@@ -832,14 +832,20 @@
   var io;
   function observeThumbs(){
     if(io)io.disconnect();
+    TQ.length=0;
     io=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){var c=en.target;io.unobserve(c);loadThumb(c);}});},{rootMargin:'300px'});
     document.querySelectorAll('.card:not(.gp)').forEach(function(c){io.observe(c);});
     // Red de seguridad: si el observador no dispara a tiempo (listas grandes,
     // pestaña en segundo plano, filtros muy seguidos), forzamos la carga de las
     // miniaturas que sigan "cargando", usando solo tarjetas que existen ahora.
+    // Solo tarjetas cerca de la pantalla: pedir las ~3.000 miniaturas de golpe
+    // satura la conexión y hace que Google bloquee la red por "tráfico automatizado".
     setTimeout(function(){
+      var lim=window.innerHeight*2;
       document.querySelectorAll('.card .ph.spin').forEach(function(ph){
-        var c=ph.closest('.card'); if(c)loadThumb(c);
+        var c=ph.closest('.card'); if(!c)return;
+        var b=c.getBoundingClientRect();
+        if(b.bottom>-lim&&b.top<window.innerHeight+lim)loadThumb(c);
       });
     },2500);
   }
@@ -849,14 +855,26 @@
     card.setAttribute('data-loading','1');
     tryLoadThumb(card,'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w400',true);
   }
-  function tryLoadThumb(card,url,allowRetry){
-    var img=new Image();
-    img.onload=function(){setThumb(card,url);};
-    img.onerror=function(){
-      if(allowRetry){ setTimeout(function(){tryLoadThumb(card,url,false);},900); }
-      else { setPh(card); }
-    };
-    img.src=url;
+  // Cola de miniaturas: máximo TMAX descargas a la vez.
+  var TQ=[],TACT=0,TMAX=8;
+  function tryLoadThumb(card,url,allowRetry){TQ.push([card,url,allowRetry]);pumpThumbs();}
+  function pumpThumbs(){
+    while(TACT<TMAX&&TQ.length){
+      var t=TQ.shift();
+      if(!t[0].isConnected)continue;
+      TACT++;
+      (function(card,url,allowRetry){
+        var img=new Image(),done=false;
+        function fin(){if(done)return;done=true;TACT--;pumpThumbs();}
+        img.onload=function(){fin();setThumb(card,url);};
+        img.onerror=function(){
+          fin();
+          if(allowRetry){ setTimeout(function(){tryLoadThumb(card,url,false);},900); }
+          else { setPh(card); }
+        };
+        img.src=url;
+      })(t[0],t[1],t[2]);
+    }
   }
   function setThumb(card,src){
     if(card.querySelector('.thumb'))return;
