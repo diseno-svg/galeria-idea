@@ -405,6 +405,10 @@
 .calwrap{position:fixed;inset:0;background:var(--bg);z-index:80;display:none;flex-direction:column}.calwrap.show{display:flex}.calbar{display:flex;align-items:center;gap:14px;padding:calc(16px + env(safe-area-inset-top)) 20px 16px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;flex-wrap:wrap}.calbar .ctit{font-family:var(--font-d);font-size:26px;letter-spacing:.04em}.calbar select{margin-left:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;cursor:pointer;font-family:var(--font)}.calbar .cclose{width:40px;height:40px;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--text);cursor:pointer;font-size:16px;display:grid;place-items:center}.calbody{padding:18px 22px;overflow-y:auto;flex:1}
 .caltable{width:100%;border-collapse:collapse;font-size:13px}.caltable th{text-align:left;padding:10px 12px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);white-space:nowrap}.caltable td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--text);vertical-align:middle}.caltable tr:hover td{background:var(--panel)}.cpill{display:inline-block;padding:3px 10px;border-radius:20px;font-weight:600;font-size:12px;color:#16202e;white-space:nowrap}.cnum{color:var(--muted)}.cempty{color:var(--dim)}
 .calviews{display:flex;gap:6px}.calviewbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}.calviewbtn.active{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}.calctrl{display:flex;align-items:center;gap:8px;margin-left:auto}.calnav{width:32px;height:32px;border-radius:8px;background:var(--panel);border:1px solid var(--line);color:var(--text);cursor:pointer;font-size:16px}.callabel{font-weight:700;font-size:15px;min-width:150px;text-align:center;text-transform:capitalize}.calanchor{margin:0 0 14px;color:var(--muted);font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.calanchor select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px}.calmonth{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.caldow{text-align:center;color:var(--muted);font-size:12px;font-weight:700;padding:4px 0}.calcell{min-height:100px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 7px;overflow:hidden}.calcell.empty{background:transparent;border-color:transparent}.calcell .dnum{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px}.calcell.today{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}.calcell.today .dnum{color:var(--gold)}.calev{font-size:11px;border-radius:6px;padding:3px 5px;margin-bottom:4px;color:#16202e;line-height:1.25}.calev .es{font-weight:700;display:block}.calev .ep{display:block;font-size:10px;opacity:.9}
+.vwrap{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;justify-self:stretch}
+.vwrap iframe{width:100%;height:calc(100dvh - 110px);border:0;border-radius:8px;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.vswitch{background:rgba(255,255,255,.07);color:var(--muted);border:1px solid var(--line2);border-radius:999px;padding:6px 14px;font:inherit;font-size:12px;cursor:pointer}
+@media(max-width:720px){.vwrap iframe{height:calc(100dvh - 215px - env(safe-area-inset-bottom));border-radius:0;box-shadow:none}}
 </style>
 </head>
 <body>
@@ -695,11 +699,11 @@
     return '<div class="gm">'+p.join('')+'</div>';
   }
 
-  var FKEYS=[['f-servicio','servicio'],['f-sede','sede'],['f-anio','_fecha'],['f-estado','estado'],
+  var FKEYS=[['f-servicio','servicio'],['f-sede','sede'],['f-anio','_year'],['f-estado','estado'],
              ['f-tipo','tipo'],['f-tipoevento','tipoEvento']];
 
   function onData(rows){
-    ALL=rows||[]; INFO={};
+    ALL=(rows||[]).filter(function(r){return r&&(r.nombre||r.driveId);}); INFO={};
     ALL.forEach(function(r){
       var y=(r.anio||'').match(/20\d{2}/);if(!y)y=(r.fecha||'').match(/20\d{2}/);if(!y)y=(r.album||'').match(/20\d{2}/);
       r._year=y?y[0]:'';
@@ -892,6 +896,30 @@
   });
 
   // ── Visor ──
+  // Videos: por defecto el reproductor de Drive, que convierte el video a un
+  // formato que lee cualquier navegador (los .MOV HEVC/HDR de iPhone se veían
+  // negros o lavados en el <video> directo). El directo queda como alternativa.
+  function renderVideo(stage,id,nativo){
+    stage.innerHTML='';
+    var box=document.createElement('div');box.className='vwrap';
+    if(nativo){
+      var vid=document.createElement('video');
+      vid.controls=true;vid.playsInline=true;vid.setAttribute('webkit-playsinline','');vid.preload='metadata';
+      vid.poster='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600';
+      vid.src='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;
+      box.appendChild(vid);
+    } else {
+      var fr=document.createElement('iframe');
+      fr.src='https://drive.google.com/file/d/'+encodeURIComponent(id)+'/preview';
+      fr.setAttribute('allow','autoplay; fullscreen');fr.setAttribute('allowfullscreen','');fr.title='Video';
+      box.appendChild(fr);
+    }
+    var sw=document.createElement('button');sw.type='button';sw.className='vswitch';
+    sw.textContent=nativo?'Volver al reproductor de Drive':'\u00bfNo carga? Usar reproductor directo';
+    sw.onclick=function(e){e.stopPropagation();renderVideo(stage,id,!nativo);};
+    box.appendChild(sw);
+    stage.appendChild(box);
+  }
   function openLB(i){
     curIndex=i;var r=ORDER[i];if(!r)return;
     var lb=$('lb'); if(!lb.classList.contains('show')){lb.classList.add('show');document.body.classList.add('noscroll');}
@@ -909,13 +937,8 @@
       stage.className='';
       stage.innerHTML='<div class="gpstage">'+ic('photos')+'<h3>Álbum en Google Fotos</h3><p>'+(m?fmtN(+m[1])+' elementos que todavía no se han pasado a Drive. ':'Este álbum todavía no se ha pasado a Drive. ')+'Tócalo abajo para verlo en Google Fotos.</p></div>';
     } else if(r.tipo==='Video'){
-      stage.className='';stage.innerHTML='';
-      // Video nativo: la API de Drive soporta peticiones Range (streaming y seek).
-      var vid=document.createElement('video');
-      vid.controls=true;vid.playsInline=true;vid.setAttribute('webkit-playsinline','');vid.preload='metadata';
-      vid.poster='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600';
-      vid.src='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;
-      stage.appendChild(vid);
+      stage.className='';
+      renderVideo(stage,id,false);
     } else {
       var img=document.createElement('img');img.decoding='async';img.alt=inf.title;
       img.onerror=function(){if(curIndex===i){stage.className='spinbox';stage.innerHTML='Sin vista previa disponible';}};
