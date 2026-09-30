@@ -997,7 +997,14 @@
     // sin la página intermedia de "no se puede escanear por virus".
     var a=document.createElement('a');
     a.href='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;
-    a.download='';document.body.appendChild(a);a.click();a.remove();
+    a.download='';
+    // Dentro de Producción (iframe) o en iPhone/iPad, el enlace se abre en una
+    // pestaña nueva: así la descarga no reemplaza la galería y iOS muestra el
+    // archivo para guardarlo.
+    var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    var enMarco=false;try{enMarco=window.top!==window.self;}catch(e){enMarco=true;}
+    if(ios||enMarco){a.target='_blank';a.rel='noopener';}
+    document.body.appendChild(a);a.click();a.remove();
   }
   function toggleFavUI(el,id){
     toggleFav(id);var on=FAVS.has(id);
