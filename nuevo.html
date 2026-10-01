@@ -159,12 +159,12 @@
   @keyframes sh{to{background-position:-220% 0}}
   .card::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);pointer-events:none}
   .vb{position:absolute;right:6px;bottom:6px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
-    background:rgba(2,11,26,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;pointer-events:none}
+    background:rgba(2,11,26,.74);color:#fff;pointer-events:none}
   .vb .ic{width:11px;height:11px;margin-left:1px}
   .card .fav{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;
-    display:grid;place-items:center;background:rgba(2,11,26,.34);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    display:grid;place-items:center;background:rgba(2,11,26,.5);
     color:rgba(255,255,255,.9);opacity:.95;transition:opacity .2s,transform .15s;z-index:2}
-  .card .fav .ic{width:14px;height:14px;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.45))}
+  .card .fav .ic{width:14px;height:14px}
   .card .fav.on{color:var(--gold)}
   .card .fav.on .ic{fill:currentColor}
   .card .fav:active{transform:scale(.85)}
@@ -789,12 +789,15 @@
     apply();
   });
 
+  var needRender=false;
   function apply(){
     buildFilters();
     VIEW=ALL.filter(function(r){return passes(r,null) && (!soloFav || FAVS.has(r.driveId));});
     $('count').textContent=(VIEW.length===ALL.length)?(fmtN(ALL.length)+' archivos'):(fmtN(VIEW.length)+' de '+fmtN(ALL.length));
     $('fapply').textContent=VIEW.length?('Ver '+fmtN(VIEW.length)+' archivo'+(VIEW.length===1?'':'s')):'Sin resultados';
-    renderChips();render();syncQF();updateHero();
+    // Con una hoja abierta (filtros, menú) solo se cuentan los resultados; las tarjetas
+    // se dibujan al cerrarla. Redibujar miles de tarjetas detrás de la hoja colgaba el iPhone.
+    renderChips();if(document.querySelector('.sheet.open')){needRender=true;}else{needRender=false;render();}syncQF();updateHero();
     if(filtrosListos)saveFiltros();
   }
 
@@ -1091,6 +1094,7 @@
   function closeSheets(keepScrim){
     document.querySelectorAll('.sheet.open').forEach(function(s){s.classList.remove('open');});
     if(!keepScrim){$('scrim').classList.remove('show');document.body.classList.remove('noscroll');}
+    if(needRender){needRender=false;render();}
   }
   $('scrim').onclick=function(){closeSheets();};
   document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=function(){closeSheets();};});
