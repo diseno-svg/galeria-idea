@@ -801,9 +801,24 @@
     if(filtrosListos)saveFiltros();
   }
 
+  // Las tarjetas se dibujan por tandas a medida que se baja: dibujar las ~3.300
+  // de una vez agotaba la memoria del iPhone y la pestaña se cerraba.
+  var RBATCH=150, RS=null, rio=null;
+  function cardHtml(r){
+    var isGp=String(r.driveId||'').indexOf('gphotos:')===0, fav=FAVS.has(r.driveId);
+    var h='<div class="card'+(isGp?' gp':'')+'" data-i="'+r._i+'" data-drive="'+esc(r.driveId)+'">';
+    if(isGp){
+      var m=String(r.nombre||'').match(/^(\d+)/);
+      h+='<div class="gpin">'+ic('photos')+'<b>'+esc(r._info.title)+'</b>'+(m?'<small>'+fmtN(+m[1])+' elementos</small>':'')+'</div>';
+    } else {
+      h+='<div class="ph spin">'+ic('image')+'</div>';
+      if(r.tipo==='Video')h+='<span class="vb">'+ic('play','fill')+'</span>';
+    }
+    return h+'<button class="fav'+(fav?' on':'')+'" aria-label="Favorito" aria-pressed="'+fav+'">'+ic('star')+'</button></div>';
+  }
   function render(){
     var main=$('main');
-    ORDER=[];
+    ORDER=[]; RS=null; if(rio){rio.disconnect();rio=null;}
     if(!VIEW.length){
       main.innerHTML='<div class="state">'+ic('search')+'<div class="big">Sin resultados</div>Prueba con otra búsqueda u otros filtros.<br><button class="btn ghost" id="emptyclear">Limpiar filtros</button></div>';
       var ec=$('emptyclear'); if(ec)ec.onclick=clearAll;
@@ -812,44 +827,53 @@
     var groups={},order=[];
     // Los álbumes que siguen en Google Fotos (sin migrar) se juntan en una sola sección.
     VIEW.forEach(function(r){var g=String(r.driveId||'').indexOf('gphotos:')===0?'__gp__':(r.album||'');if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(r);});
-    var html='';
-    order.forEach(function(g){
-      var list=groups[g], inf=list[0]._info;
-      var head=(g==='__gp__')
-        ? '<div class="gt">Álbumes en Google Fotos</div><div class="gm"><span class="gpb">'+ic('photos')+'Todavía no pasados a Drive</span></div>'
-        : '<div class="gt">'+esc(inf.title)+'</div>'+metaHtml(inf);
-      html+='<section class="grp"><div class="ghead"><div class="ghead-t">'+head+'</div>'
-        +'<div class="gn">'+fmtN(list.length)+'</div></div><div class="grid">';
-      list.forEach(function(r,k){
-        r._i=ORDER.length; r._gi=k; r._gn=list.length; ORDER.push(r);
-        var isGp=String(r.driveId||'').indexOf('gphotos:')===0, fav=FAVS.has(r.driveId);
-        html+='<div class="card'+(isGp?' gp':'')+'" data-i="'+r._i+'" data-drive="'+esc(r.driveId)+'">';
-        if(isGp){
-          var m=String(r.nombre||'').match(/^(\d+)/);
-          html+='<div class="gpin">'+ic('photos')+'<b>'+esc(r._info.title)+'</b>'+(m?'<small>'+fmtN(+m[1])+' elementos</small>':'')+'</div>';
-        } else {
-          html+='<div class="ph spin">'+ic('image')+'</div>';
-          if(r.tipo==='Video')html+='<span class="vb">'+ic('play','fill')+'</span>';
-        }
-        html+='<button class="fav'+(fav?' on':'')+'" aria-label="Favorito" aria-pressed="'+fav+'">'+ic('star')+'</button></div>';
-      });
-      html+='</div></section>';
-    });
-    main.innerHTML=html;
-    observeThumbs();
+    // El orden completo se arma ya (el visor lo usa para pasar de un archivo a otro).
+    order.forEach(function(g){groups[g].forEach(function(r,k){r._i=ORDER.length;r._gi=k;r._gn=groups[g].length;ORDER.push(r);});});
+    main.innerHTML='';
+    RS={order:order,groups:groups,gi:0,ci:0,grid:null};
+    observeThumbs(true);
+    renderMore();
+  }
+  function renderMore(){
+    var s=RS; if(!s)return;
+    var main=$('main'), budget=RBATCH;
+    while(budget>0&&s.gi<s.order.length){
+      var g=s.order[s.gi], list=s.groups[g];
+      if(s.ci===0){
+        var inf=list[0]._info;
+        var head=(g==='__gp__')
+          ? '<div class="gt">Álbumes en Google Fotos</div><div class="gm"><span class="gpb">'+ic('photos')+'Todavía no pasados a Drive</span></div>'
+          : '<div class="gt">'+esc(inf.title)+'</div>'+metaHtml(inf);
+        var sec=document.createElement('section');sec.className='grp';
+        sec.innerHTML='<div class="ghead"><div class="ghead-t">'+head+'</div><div class="gn">'+fmtN(list.length)+'</div></div><div class="grid"></div>';
+        main.appendChild(sec); s.grid=sec.querySelector('.grid');
+      }
+      var chunk='';
+      while(budget>0&&s.ci<list.length){chunk+=cardHtml(list[s.ci]);s.ci++;budget--;}
+      s.grid.insertAdjacentHTML('beforeend',chunk);
+      if(s.ci>=list.length){s.gi++;s.ci=0;}
+    }
+    observeThumbs(false);
+    var more=$('rmore'); if(more)more.remove();
+    if(s.gi<s.order.length){
+      more=document.createElement('div');more.id='rmore';more.style.height='1px';main.appendChild(more);
+      if(!rio)rio=new IntersectionObserver(function(en){if(en.some(function(x){return x.isIntersecting;}))renderMore();},{rootMargin:'1500px'});
+      rio.observe(more);
+    } else if(rio){rio.disconnect();rio=null;}
   }
 
   var io;
-  function observeThumbs(){
-    if(io)io.disconnect();
-    TQ.length=0;
-    io=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){var c=en.target;io.unobserve(c);loadThumb(c);}});},{rootMargin:'300px'});
-    document.querySelectorAll('.card:not(.gp)').forEach(function(c){io.observe(c);});
-    // Red de seguridad: si el observador no dispara a tiempo (listas grandes,
-    // pestaña en segundo plano, filtros muy seguidos), forzamos la carga de las
-    // miniaturas que sigan "cargando", usando solo tarjetas que existen ahora.
-    // Solo tarjetas cerca de la pantalla: pedir las ~3.000 miniaturas de golpe
-    // satura la conexión y hace que Google bloquee la red por "tráfico automatizado".
+  function observeThumbs(reset){
+    if(reset||!io){
+      if(io)io.disconnect();
+      TQ.length=0;
+      io=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){var c=en.target;io.unobserve(c);loadThumb(c);}});},{rootMargin:'300px'});
+      if(reset)return;
+    }
+    document.querySelectorAll('.card:not(.gp):not([data-obs])').forEach(function(c){c.setAttribute('data-obs','1');io.observe(c);});
+    // Red de seguridad: si el observador no dispara a tiempo, se cargan las
+    // miniaturas que sigan "cargando" cerca de la pantalla (no todas: pedir miles
+    // de golpe satura la conexión y Google bloquea la red por "tráfico automatizado").
     setTimeout(function(){
       var lim=window.innerHeight*2;
       document.querySelectorAll('.card .ph.spin').forEach(function(ph){
