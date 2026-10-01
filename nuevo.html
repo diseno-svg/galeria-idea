@@ -891,7 +891,15 @@
     tryLoadThumb(card,'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w400',true);
   }
   // Cola de miniaturas: máximo TMAX descargas a la vez.
-  var TQ=[],TACT=0,TMAX=8;
+  var TQ=[],TACT=0,TMAX=8,TIMGS=[],TST={ok:0,err:0,tiempo:0};
+  // Diagnóstico: abrir la galería con ?diag=1 muestra cómo va la carga de miniaturas.
+  if(/[?&]diag=1/.test(location.search)){
+    setInterval(function(){
+      var d=document.getElementById('tdiag');
+      if(!d){d=document.createElement('div');d.id='tdiag';d.style.cssText='position:fixed;left:6px;bottom:6px;z-index:99999;background:#000c;color:#0f0;font:12px monospace;padding:6px 8px;border-radius:6px;pointer-events:none';document.body.appendChild(d);}
+      d.textContent='activas '+TACT+' · cola '+TQ.length+' · ok '+TST.ok+' · error '+TST.err+' · colgadas '+TST.tiempo+' · tarjetas '+document.querySelectorAll('.card').length+' · cargando '+document.querySelectorAll('.card .ph.spin').length;
+    },1000);
+  }
   function tryLoadThumb(card,url,allowRetry){TQ.push([card,url,allowRetry]);pumpThumbs();}
   function pumpThumbs(){
     while(TACT<TMAX&&TQ.length){
@@ -899,14 +907,20 @@
       if(!t[0].isConnected)continue;
       TACT++;
       (function(card,url,allowRetry){
-        var img=new Image(),done=false;
-        function fin(){if(done)return;done=true;TACT--;pumpThumbs();}
-        img.onload=function(){fin();setThumb(card,url);};
-        img.onerror=function(){
-          fin();
+        var img=new Image(),done=false,tm;
+        TIMGS.push(img);
+        function fin(){if(done)return false;done=true;clearTimeout(tm);TACT--;var k=TIMGS.indexOf(img);if(k>=0)TIMGS.splice(k,1);pumpThumbs();return true;}
+        function fallo(motivo){
+          if(!fin())return;
+          TST[motivo]++;
           if(allowRetry){ setTimeout(function(){tryLoadThumb(card,url,false);},900); }
           else { setPh(card); }
-        };
+        }
+        img.onload=function(){if(!fin())return;TST.ok++;setThumb(card,url);};
+        img.onerror=function(){fallo('err');};
+        // Si una miniatura se queda colgada (pasa en iPhone), se libera el puesto
+        // a los 12 s: antes 8 colgadas paraban la cola y no se veía ninguna.
+        tm=setTimeout(function(){img.onload=img.onerror=null;try{img.src='';}catch(e){}fallo('tiempo');},12000);
         img.src=url;
       })(t[0],t[1],t[2]);
     }
