@@ -1057,8 +1057,9 @@
     var ctl=window.AbortController?new AbortController():null; DLC=ctl;
     dlPanel('<div id="dltx">Preparando archivo…</div><div style="display:flex;gap:8px;margin-top:10px">'+dlBtn('dlx','Cancelar',false)+'</div>');
     $('dlx').onclick=dlCerrar;
-    function abrir(msg){
-      dlPanel('<div>'+msg+'</div><div style="display:flex;gap:8px;margin-top:10px">'+dlBtn('dlx','Cerrar',false)+'<a id="dlo" href="'+url+'" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:11px 10px;border-radius:10px;font:600 15px system-ui,sans-serif;background:#FCB72D;color:#1d1402;text-decoration:none">Abrir archivo</a></div>');
+    function abrir(msg,enDrive){
+      var href=enDrive?'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view':url;
+      dlPanel('<div>'+msg+'</div><div style="display:flex;gap:8px;margin-top:10px">'+dlBtn('dlx','Cerrar',false)+'<a id="dlo" href="'+href+'" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:11px 10px;border-radius:10px;font:600 15px system-ui,sans-serif;background:#FCB72D;color:#1d1402;text-decoration:none">'+(enDrive?'Abrir en Google Drive':'Abrir archivo')+'</a></div>');
       $('dlx').onclick=dlCerrar;
     }
     fetch(base+'?fields=name,size,mimeType&key='+DRIVE_API_KEY,ctl?{signal:ctl.signal}:{})
@@ -1066,7 +1067,7 @@
       .then(function(m){
         var size=+m.size||0, name=m.name||'archivo';
         if(size>DLMAX){
-          abrir('Este archivo pesa '+dlMB(size)+', muy pesado para guardarlo desde la página. Ábrelo y usa el botón Compartir → «Guardar en Archivos», o descárgalo desde la app de Google Drive.');
+          abrir('Este archivo pesa '+dlMB(size)+': es muy pesado para guardarlo desde la página. Ábrelo en Google Drive (mejor con la app instalada) y ahí toca ⋮ → «Enviar una copia» → «Guardar video», o «Descargar».',true);
           return;
         }
         return fetch(url,ctl?{signal:ctl.signal}:{}).then(function(r){
