@@ -1036,7 +1036,72 @@
     if((t=e.target.closest('[data-dl]'))){ dlOne(t.getAttribute('data-dl')); }
   });
 
+  // En iPhone/iPad: se baja el archivo dentro de la página y se abre el menú
+  // Compartir de iOS («Guardar imagen» / «Guardar video» / «Guardar en Archivos»).
+  // Abrir el enlace en otra pestaña no descargaba nada en el teléfono.
+  var DLMAX=300*1024*1024, DLC=null;
+  function dlPanel(html){
+    var p=$('dlpanel');
+    if(!p){p=document.createElement('div');p.id='dlpanel';
+      p.style.cssText='position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:9999;background:#0a1b38;border:1px solid #FCB72D;border-radius:14px;padding:14px 16px;color:#fff;font:15px/1.4 system-ui,-apple-system,sans-serif;box-shadow:0 10px 30px #000a;max-width:520px;margin:0 auto';
+      document.body.appendChild(p);}
+    p.innerHTML=html;return p;
+  }
+  function dlCerrar(){if(DLC){try{DLC.abort();}catch(e){}DLC=null;}var p=$('dlpanel');if(p)p.remove();}
+  function dlBtn(id,txt,prim){return '<button id="'+id+'" style="flex:1;padding:11px 10px;border-radius:10px;font:600 15px system-ui,sans-serif;border:1px solid #FCB72D;'+(prim?'background:#FCB72D;color:#1d1402':'background:transparent;color:#FCB72D')+'">'+txt+'</button>';}
+  function dlMB(n){return (n/1048576).toFixed(n<10485760?1:0).replace('.',',')+' MB';}
+  function dlShare(id){
+    dlCerrar();
+    var base='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id);
+    var url=base+'?alt=media&key='+DRIVE_API_KEY;
+    var ctl=window.AbortController?new AbortController():null; DLC=ctl;
+    dlPanel('<div id="dltx">Preparando archivo…</div><div style="display:flex;gap:8px;margin-top:10px">'+dlBtn('dlx','Cancelar',false)+'</div>');
+    $('dlx').onclick=dlCerrar;
+    function abrir(msg){
+      dlPanel('<div>'+msg+'</div><div style="display:flex;gap:8px;margin-top:10px">'+dlBtn('dlx','Cerrar',false)+'<a id="dlo" href="'+url+'" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:11px 10px;border-radius:10px;font:600 15px system-ui,sans-serif;background:#FCB72D;color:#1d1402;text-decoration:none">Abrir archivo</a></div>');
+      $('dlx').onclick=dlCerrar;
+    }
+    fetch(base+'?fields=name,size,mimeType&key='+DRIVE_API_KEY,ctl?{signal:ctl.signal}:{})
+      .then(function(r){return r.ok?r.json():{};}).catch(function(e){if(e&&e.name==='AbortError')throw e;return {};})
+      .then(function(m){
+        var size=+m.size||0, name=m.name||'archivo';
+        if(size>DLMAX){
+          abrir('Este archivo pesa '+dlMB(size)+', muy pesado para guardarlo desde la página. Ábrelo y usa el botón Compartir → «Guardar en Archivos», o descárgalo desde la app de Google Drive.');
+          return;
+        }
+        return fetch(url,ctl?{signal:ctl.signal}:{}).then(function(r){
+          if(!r.ok)throw new Error('HTTP '+r.status);
+          var total=size||+r.headers.get('content-length')||0;
+          if(!r.body||!r.body.getReader)return r.blob();
+          var rd=r.body.getReader(),parts=[],got=0;
+          function paso(){return rd.read().then(function(x){
+            if(x.done)return new Blob(parts,{type:m.mimeType||r.headers.get('content-type')||''});
+            parts.push(x.value);got+=x.value.length;
+            var t=$('dltx');if(t)t.textContent='Bajando '+name+'… '+(total?Math.round(got*100/total)+'%':dlMB(got));
+            return paso();});}
+          return paso();
+        }).then(function(blob){
+          if(DLC!==ctl)return;
+          var file=new File([blob],name,{type:blob.type||m.mimeType||'application/octet-stream'});
+          if(!(navigator.canShare&&navigator.canShare({files:[file]}))){abrir('Este teléfono no permite guardarlo directo desde la página.');return;}
+          // El menú Compartir necesita un toque nuevo (iOS no lo abre al terminar la descarga sola).
+          dlPanel('<div><b>'+esc(name)+'</b> listo ('+dlMB(blob.size)+').</div><div style="display:flex;gap:8px;margin-top:10px">'+dlBtn('dlx','Cerrar',false)+dlBtn('dlok','Guardar en el teléfono',true)+'</div>');
+          $('dlx').onclick=dlCerrar;
+          $('dlok').onclick=function(){
+            navigator.share({files:[file]}).then(function(){dlCerrar();toast('Listo');}).catch(function(e){
+              if(e&&e.name==='AbortError')return; // la persona cerró el menú: se puede volver a tocar
+              abrir('No se pudo abrir el menú para guardar ('+esc(e&&e.name||'error')+').');
+            });
+          };
+        });
+      }).catch(function(e){
+        if(e&&e.name==='AbortError')return;
+        if(DLC===ctl)abrir('No se pudo bajar el archivo ('+esc(e&&e.message||'error')+').');
+      });
+  }
   function dlOne(id){
+    var esIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+    if(esIOS&&navigator.share&&navigator.canShare&&window.File&&window.fetch){dlShare(id);return;}
     toast('Descargando…');
     // API de Drive v3 (alt=media): responde con content-disposition: attachment,
     // sin la página intermedia de "no se puede escanear por virus".
