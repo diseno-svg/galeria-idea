@@ -609,6 +609,33 @@
   .fld select{background:#000}
   .lb-side{background:#0A0A0A}
   .splash{background:#000!important}
+  /* ── Navegación limpia: pestañas para el tipo, texto sin cajas para sede y curso ── */
+  .seg{gap:2px;margin-top:12px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .seg-b,.seg-b:hover{height:40px;padding:0 14px;border:0;border-radius:0;background:transparent;color:#A3A3A3;
+    font-size:13.5px;font-weight:500;position:relative;flex:none}
+  .seg-b:hover{color:#fff}
+  .seg-b.active,.seg-b.active:hover{background:transparent;color:#fff;font-weight:600;box-shadow:none}
+  .seg-b.active::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--gold)}
+  .seg-b.active .ic{color:var(--gold)}
+  .nav2{gap:4px;margin-top:10px}
+  .prow{gap:2px}
+  .prow .pl{flex:none;width:64px;margin-right:0;font-size:10px;font-weight:600;letter-spacing:.2em;color:#7A7A7A}
+  .pill,.pill:hover{height:30px;padding:0 10px;border:0;border-radius:0;background:transparent;color:#BDBDBD;
+    font-size:13px;font-weight:500;position:relative}
+  .pill:hover{color:#fff}
+  .pill small{font-size:10.5px;color:#6B6B6B;font-weight:500;margin-left:-1px}
+  .pill.on,.pill.on:hover{background:transparent;color:var(--gold);font-weight:600}
+  .pill.on small{color:var(--gold);opacity:.7}
+  .pill.on::after{content:"";position:absolute;left:10px;right:10px;bottom:2px;height:1.5px;background:var(--gold)}
+  .pill.zero{opacity:.35}
+  .hdr{padding-bottom:6px}
+  .hdr::after{height:1px;bottom:-1px;opacity:.8}
+  @media(min-width:721px){
+    .seg{margin-top:14px}
+    .nav2{flex-direction:column;gap:2px;margin-top:8px}
+    .prow .pl{width:70px}
+  }
+  @media(max-width:720px){ .seg-b{flex:none;padding:0 11px} }
 </style>
 </head>
 <body>
