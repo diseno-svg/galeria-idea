@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galería IDEA — Contenido</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#01275C">
+<meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Galería IDEA">
@@ -575,6 +575,40 @@
   .hero{overflow:hidden}
   .hero-mark{width:min(520px,80vw);right:-4%;opacity:.07!important}
   @media(min-width:721px){ .brand-lock{height:42px} .hero-mark{width:600px;right:2%} .card{--cr:6px;border-radius:6px} }
+  /* ── Fondo negro (decisión de Víctor, 6 nov 2026). §4.9: blanco sobre negro 21:1 · navy sobre negro prohibido,
+        así que en esta versión no hay navy: negro, blanco y ámbar, con grises que salen de mezclar negro y blanco ── */
+  :root{
+    --bg:#000000; --bg2:#0A0A0A; --surface:#111111; --surface2:#1C1C1C; --surface3:#2B2B2B;
+    --line:rgba(255,255,255,.12); --line2:rgba(255,255,255,.28);
+    --muted:#A3A3A3; --dim:#7A7A7A; --sky:#A3A3A3;
+  }
+  html,.bgfx{background:#000}
+  ::-webkit-scrollbar-thumb{background:#2B2B2B}
+  .hdr{background:#000}
+  .fbtn .n{box-shadow:0 0 0 2px #000}
+  .ibtn,.fbtn{background:#111;border-color:var(--line)}
+  .ibtn:hover{background:#1C1C1C}
+  .search input{background:#111;border-color:var(--line)}
+  .search input::placeholder{color:#7A7A7A}
+  .brand-sep{background:rgba(255,255,255,.3)}
+  .brand-txt .b2,.count,.hero p,.albbar span,.mtile span,.gm .gpb{color:#D4D4D4}
+  .seg-b,.pill{border-color:rgba(255,255,255,.2);color:#D4D4D4}
+  .seg-b:hover,.pill:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.05)}
+  .pill small,.prow .pl,.gn,.gopen small,.st small,.fld>span{color:#A3A3A3}
+  .hero{background:#000;border-bottom:1px solid rgba(255,255,255,.1)}
+  .hero-mark{opacity:.08!important}
+  .stats{border-top-color:rgba(255,255,255,.14)}
+  .st+.st{border-left-color:rgba(255,255,255,.14)}
+  .gm{color:#A3A3A3}
+  .gm>span+span::before{background:#555}
+  .ghead::after{background:rgba(255,255,255,.12)}
+  .card,.mtile{background:#111}
+  .card .ph.spin{background:linear-gradient(110deg,#111 30%,#1C1C1C 50%,#111 70%);background-size:200% 100%}
+  .albbar{background:#111;border-color:rgba(255,255,255,.12)}
+  .sheet{background:#111!important}
+  .fld select{background:#000}
+  .lb-side{background:#0A0A0A}
+  .splash{background:#000!important}
 </style>
 </head>
 <body>
