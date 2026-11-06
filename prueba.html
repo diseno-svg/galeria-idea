@@ -544,7 +544,7 @@
   @keyframes reelFloat{from{transform:translateY(-22px)}to{transform:translateY(22px)}}
   @keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.12)}}
   .hero::before{content:"";position:absolute;inset:0;z-index:-1;
-    background:radial-gradient(ellipse at center,rgba(1,23,55,.55),rgba(1,23,55,.82) 70%),linear-gradient(180deg,rgba(1,39,92,.25),rgba(1,23,55,.6))}
+    background:radial-gradient(ellipse at center,rgba(1,23,55,.62) 0%,rgba(1,23,55,.38) 60%,rgba(1,23,55,.55) 100%)}
   .hero-in{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:56px 20px 46px;text-align:center;display:flex;flex-direction:column;align-items:center}
   .hero-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border:1px solid rgba(252,183,45,.8);border-radius:999px;
     color:var(--gold);font-size:10px;font-weight:600;letter-spacing:.22em;background:rgba(1,23,55,.35);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -659,6 +659,13 @@
     .grp{opacity:1;transform:none;transition:none}
   }
   .hero.off{display:none!important}
+  @media(max-width:720px){
+    .nav2{align-items:stretch}
+    .prow{justify-content:flex-start;padding:0 2px}
+    .seg{width:100%;justify-content:space-between}
+    .seg-b,.seg-b.active{padding:0 10px;flex:1 1 auto}
+    #qf-all .ic{display:none}
+  }
 </style>
 </head>
 <body>
@@ -1766,11 +1773,11 @@
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(moveInd);
 
     // Portada: pared de reels reales de IDEA (videos MP4 de la galería).
-    // En teléfono, con ahorro de datos o con movimiento reducido solo se muestran las portadas
-    // (imágenes livianas); en computadora se reproducen hasta 3 videos a la vez y se van turnando.
+    // En computadora se reproducen hasta 3 videos a la vez y se van turnando; en teléfono 1 solo y sin
+    // turnos (para no gastar datos). Con ahorro de datos o movimiento reducido, solo portadas.
     var box=$('reels'), built=false;
-    var lite=window.matchMedia('(max-width:720px)').matches||
-      (navigator.connection&&navigator.connection.saveData)||
+    var phone=window.matchMedia('(max-width:720px)').matches;
+    var lite=(navigator.connection&&navigator.connection.saveData)||
       window.matchMedia('(prefers-reduced-motion:reduce)').matches;
     function thumb(id,w){return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w'+w;}
     function vsrc(id){return 'https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;}
@@ -1781,7 +1788,7 @@
       var mp4=ALL.filter(function(r){return ok(r)&&r.tipo==='Video'&&/\.mp4$/i.test(r.nombre);});
       var listos=mp4.filter(function(r){return r.estado==='Listo';});
       var pool=shuffle((listos.length>=8?listos:mp4).slice(0,60));
-      var n=lite?5:9, pick=pool.slice(0,n);
+      var n=phone?5:9, pick=pool.slice(0,n);
       if(pick.length<n){
         var fotos=shuffle(ALL.filter(function(r){return ok(r)&&r.tipo!=='Video';}).slice(0,80));
         pick=pick.concat(fotos.slice(0,n-pick.length));
@@ -1793,7 +1800,7 @@
       if(lite)return;
       startVideos(pool.slice(n));
     }
-    var MAXV=3, playing=[], spare=[], heroVisible=true, swaps=0;
+    var MAXV=phone?1:3, playing=[], spare=[], heroVisible=true, swaps=0;
     function tilesInView(){
       var hb=$('hero').getBoundingClientRect();
       return [].filter.call(box.querySelectorAll('.reel[data-v]'),function(t){
@@ -1818,7 +1825,7 @@
       tiles.slice(0,MAXV).forEach(function(t,k){setTimeout(function(){playIn(t,t.getAttribute('data-v'));},k*900);});
       // Cada 28 s cambia uno de los videos (máximo 8 cambios para no gastar datos de más).
       setInterval(function(){
-        if(!heroVisible||document.hidden||swaps>=8||!spare.length||!playing.length)return;
+        if(phone||!heroVisible||document.hidden||swaps>=8||!spare.length||!playing.length)return;
         swaps++; var t=playing[swaps%playing.length], id=spare.shift();
         var img=t.querySelector('img'); if(img){img.classList.remove('in');img.onload=function(){img.classList.add('in');};img.src=thumb(id,400);}
         t.setAttribute('data-v',id); playIn(t,id);
