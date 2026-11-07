@@ -685,6 +685,68 @@
   @media(min-width:721px){ .quote span{font-size:20px} }
   @media(max-width:720px){ .quote{min-height:4.4em} }
   .hero p{display:none}
+  /* ── v5: botón «+» para subir material y portada en cinta para el teléfono ── */
+  .fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:26;width:60px;height:60px;border-radius:50%;border:0;cursor:pointer;
+    display:grid;place-items:center;background:var(--gold);color:#000;box-shadow:0 12px 28px -6px rgba(1,39,92,.45),0 0 0 0 rgba(252,183,45,.5);
+    transition:transform .3s var(--ease),box-shadow .3s;animation:fabIn .6s .8s var(--ease) both,fabPulse 2.6s 2s ease-out 3}
+  .fab:hover{transform:scale(1.06) rotate(90deg)}
+  .fab:active{transform:scale(.94)}
+  .fab .ic{width:28px;height:28px;stroke-width:2.6}
+  .fab-tip{position:absolute;right:70px;top:50%;transform:translateY(-50%);white-space:nowrap;padding:7px 12px;border-radius:999px;
+    background:#01275C;color:#fff;font-size:12.5px;font-weight:600;box-shadow:var(--sh2);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+  .fab:hover .fab-tip{opacity:1}
+  @keyframes fabIn{from{opacity:0;transform:scale(.4) rotate(-90deg)}to{opacity:1;transform:none}}
+  @keyframes fabPulse{0%{box-shadow:0 12px 28px -6px rgba(1,39,92,.45),0 0 0 0 rgba(252,183,45,.55)}100%{box-shadow:0 12px 28px -6px rgba(1,39,92,.45),0 0 0 18px rgba(252,183,45,0)}}
+  body.noscroll .fab{display:none}
+  .totop{bottom:calc(90px + env(safe-area-inset-bottom));right:25px;width:46px;height:46px}
+
+  /* Hoja «Subir material» */
+  .up-steps{display:flex;gap:6px;margin:2px 0 16px}
+  .up-steps i{flex:1;height:4px;border-radius:4px;background:var(--surface3)}
+  .up-steps i.on{background:var(--gold)}
+  .up-lbl{display:flex;align-items:baseline;justify-content:space-between;margin:16px 0 8px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .up-lbl small{font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--dim)}
+  .up-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .up-chip{height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:#fff;color:#01275C;font:600 13.5px/1 var(--font);cursor:pointer;
+    transition:background .2s,color .2s,border-color .2s,transform .15s}
+  .up-chip:active{transform:scale(.95)}
+  .up-chip.on{background:#01275C;border-color:#01275C;color:#fff}
+  .up-in{width:100%;height:46px;padding:0 14px;border-radius:12px;border:1px solid transparent;background:var(--surface2);color:#01275C;
+    font:500 15px var(--font);outline:none;-webkit-appearance:none;appearance:none}
+  .up-in:focus{background:#fff;border-color:#C9D2DE;box-shadow:0 0 0 4px rgba(252,183,45,.25)}
+  .up-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .up-out{margin-top:18px;padding:14px 16px;border-radius:14px;background:#01275C;color:#fff}
+  .up-out small{display:block;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#99A9BE}
+  .up-out code{display:block;margin-top:6px;font:600 14.5px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--gold);word-break:break-word}
+  .up-out code.empty{color:#99A9BE;font-weight:500;font-family:var(--font)}
+  .up-how{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)}
+  .up-how li{display:flex;gap:10px;align-items:flex-start}
+  .up-how b{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#FEF1D5;color:#01275C;font-size:11px}
+  .up-more{display:block;text-align:center;margin-top:12px;font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:underline}
+
+  /* Teléfono: encabezado más corto y portada en cinta que pasa sola */
+  @media(max-width:720px){
+    .count{display:none}
+    .hdr{padding-bottom:8px}
+    .searchrow{margin-top:10px}
+    .search input{height:40px}
+    .seg{margin-top:10px}
+    .seg-b,.seg-b.active{height:32px;font-size:12.5px;gap:4px}
+    .seg-b .ic{width:14px;height:14px}
+    .hero{min-height:max(440px,calc(100svh - 200px))}
+    .reels{display:block}
+    .reels-row{position:absolute;left:0;top:50%;display:flex;height:60%;width:max-content;transform:translate(0,-50%);
+      animation:marq 46s linear infinite;will-change:transform}
+    .reels-row .reel{height:100%;margin:0 10px 0 0!important;animation:none}
+    @keyframes marq{from{transform:translate(0,-50%)}to{transform:translate(-50%,-50%)}}
+    .hero::before{background:linear-gradient(180deg,rgba(1,23,55,.55) 0%,rgba(1,23,55,.35) 40%,rgba(1,23,55,.35) 60%,rgba(1,23,55,.7) 100%)}
+    .hero-in{padding:40px 18px 34px}
+    .quote span{font-size:16px}
+    .stats{padding:12px 4px}
+    .fab{width:56px;height:56px;right:16px}
+    .totop{right:21px;bottom:calc(84px + env(safe-area-inset-bottom));width:44px;height:44px}
+  }
+  @media (prefers-reduced-motion:reduce){ .reels-row{animation:none} .fab{animation:none} }
 </style>
 </head>
 <body>
@@ -1818,7 +1880,7 @@
         var fs=shuffle(PORTADA_FOTOS.map(function(n){return {tipo:'Foto',poster:'portada/'+n+'.jpg'};}));
         var n=phone?5:9, pick=[], vi=0, fi=0;
         for(var k=0;k<n;k++){ var wantV=(k%2===0); if((wantV&&vi<vs.length)||fi>=fs.length)pick.push(vs[vi++]); else pick.push(fs[fi++]); }
-        paint(pick); if(!lite)startVideos(vs.slice(vi));
+        paint(pick); if(!lite&&!phone)startVideos(vs.slice(vi));
         return;
       }
       if(PORTADA_FOLDER){
@@ -1839,7 +1901,7 @@
       if(propios){
         var n0=phone?5:9, pick0=propios.slice(0,n0);
         while(pick0.length<n0)pick0=pick0.concat(propios.slice(0,n0-pick0.length));
-        paint(pick0); if(!lite)startVideos(propios.slice(n0).filter(function(r){return r.tipo==='Video';}).concat(propios.filter(function(r){return r.tipo==='Video';})));
+        paint(pick0); if(!lite&&!phone)startVideos(propios.slice(n0).filter(function(r){return r.tipo==='Video';}).concat(propios.filter(function(r){return r.tipo==='Video';})));
         return;
       }
       var mp4=ALL.filter(function(r){return ok(r)&&r.tipo==='Video'&&/\.mp4$/i.test(r.nombre);});
@@ -1851,7 +1913,7 @@
         pick=pick.concat(fotos.slice(0,n-pick.length));
       }
       paint(pick);
-      if(lite)return;
+      if(lite||phone)return;
       startVideos(pool.slice(n));
     }
     function paint(pick){
@@ -1944,6 +2006,126 @@
       function show(){ for(var i=0;i<spans.length;i++){spans[i].classList.toggle('on',i===k);ds[i].classList.toggle('on',i===k);} }
       show(); setInterval(function(){ if(document.hidden)return; k=(k+1)%FRASES.length; show(); },5200);
     }
+  })();
+  // ── v5: botón «+» → Subir material (Nombrador rápido) ──
+  // Misma regla que el Nombrador de Producción: SERVICIO - SEDE - AAAA-MM-DD - grupo - evento
+  // (sede se omite si no aplica; grupo y evento en minúsculas con «_»; vacíos = sin_grupo / general).
+  (function(){
+    var SIN_EDITAR='https://drive.google.com/drive/folders/1vva8V2Ua9Aqe42Oe6NKVeZalpXpqJ7M4';
+    var NOMBRADOR='https://produccion.aeroidea.net/nombrador-de-carpetas-de-contenido/';
+    var SERV=['TDC','TMA','PILOTO','DESPACHADOR','INGLES','AVIONICA','NEURO ORATORIA','OMA','BISTRO','INSTITUCIONAL'];
+    var SERV_LBL={'PILOTO':'Piloto','DESPACHADOR':'Despachador','INGLES':'Inglés','AVIONICA':'Aviónica','NEURO ORATORIA':'Neuro Oratoria','BISTRO':'Bistró','INSTITUCIONAL':'Institucional'};
+    var SEDES=[['BRM','Barquisimeto'],['CCS','Caracas'],['MAR','Maracaibo'],['PMV','Margarita'],['SCI','San Cristóbal'],['VLN','Valencia'],['','Sin sede']];
+    var PH=['grupo','fecha','evento','sede','servicio','ano','anio','tipo_de_evento'];
+    function limpiar(t){
+      if(!t)return '';
+      var v=String(t).trim().replace(/[()]/g,'').replace(/\s*-\s*/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'').toLowerCase();
+      return PH.indexOf(v)!==-1?'':v;
+    }
+    function hoy(){var h=new Date();return h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-'+String(h.getDate()).padStart(2,'0');}
+    var st={s:'',d:null};
+    try{var m=JSON.parse(localStorage.getItem('idea.up')||'{}'); if(m.s)st.s=m.s; if(typeof m.d==='string')st.d=m.d;}catch(e){}
+
+    // Plantilla de la hoja
+    var sh=document.createElement('aside'); sh.className='sheet'; sh.id='upsheet'; sh.setAttribute('aria-label','Subir material');
+    sh.innerHTML='<div class="sheet-grab"></div>'+
+      '<div class="sheet-head"><h2>Subir material</h2><button class="ibtn" data-close aria-label="Cerrar">'+ic('x')+'</button></div>'+
+      '<div class="sheet-body">'+
+        '<div class="up-steps"><i id="ust1"></i><i id="ust2"></i><i id="ust3"></i></div>'+
+        '<div class="up-lbl">Curso</div><div class="up-chips" id="upserv">'+SERV.map(function(s){return '<button class="up-chip" data-v="'+s+'">'+(SERV_LBL[s]||s)+'</button>';}).join('')+'</div>'+
+        '<div class="up-lbl">Sede</div><div class="up-chips" id="upsede">'+SEDES.map(function(s){return '<button class="up-chip" data-v="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
+        '<div class="up-lbl">Fecha de la captura</div><input class="up-in" type="date" id="upfecha">'+
+        '<div class="up-row">'+
+          '<div><div class="up-lbl">Grupo <small>opcional</small></div><input class="up-in" id="upgrupo" placeholder="TDC-91-MJ-AB" autocomplete="off" autocapitalize="characters"></div>'+
+          '<div><div class="up-lbl">Evento <small>opcional</small></div><input class="up-in" id="upevento" placeholder="práctica de incendios" autocomplete="off"></div>'+
+        '</div>'+
+        '<div class="up-out"><small>Nombre de la carpeta</small><code id="upname" class="empty">Elige curso y sede</code></div>'+
+        '<ol class="up-how"><li><b>1</b><span>Toca el botón: el nombre se copia y se abre «Sin Editar» en Drive.</span></li>'+
+        '<li><b>2</b><span>Crea una carpeta nueva y pega el nombre tal cual.</span></li>'+
+        '<li><b>3</b><span>Sube adentro las fotos y videos. Al día siguiente aparecen en la galería.</span></li></ol>'+
+        '<a class="up-more" href="'+NOMBRADOR+'" target="_blank" rel="noopener">Abrir el Nombrador completo</a>'+
+      '</div>'+
+      '<div class="sheet-foot"><button class="btn gold" id="upgo" disabled>'+ic('external')+'Copiar nombre y abrir Drive</button></div>';
+    document.body.appendChild(sh);
+    sh.querySelector('[data-close]').onclick=function(){closeSheets();};
+    $('upfecha').value=hoy();
+
+    function nombre(){
+      if(!st.s||st.d===null||!$('upfecha').value)return '';
+      var p=[st.s]; if(st.d)p.push(st.d);
+      p.push($('upfecha').value, limpiar($('upgrupo').value)||'sin_grupo', limpiar($('upevento').value)||'general');
+      return p.join(' - ');
+    }
+    function pintar(){
+      [].forEach.call($('upserv').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')===st.s);});
+      [].forEach.call($('upsede').children,function(b){b.classList.toggle('on',st.d!==null&&b.getAttribute('data-v')===st.d);});
+      var n=nombre(), out=$('upname');
+      out.textContent=n||(!st.s?'Elige el curso':'Elige la sede'); out.classList.toggle('empty',!n);
+      $('upgo').disabled=!n;
+      $('ust1').classList.toggle('on',!!st.s); $('ust2').classList.toggle('on',st.d!==null); $('ust3').classList.toggle('on',!!n);
+      try{localStorage.setItem('idea.up',JSON.stringify({s:st.s,d:st.d}));}catch(e){}
+    }
+    $('upserv').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.s=b.getAttribute('data-v');pintar();};
+    $('upsede').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.d=b.getAttribute('data-v');pintar();};
+    ['upfecha','upgrupo','upevento'].forEach(function(id){$(id).addEventListener('input',pintar);});
+
+    $('upgo').onclick=function(){
+      var n=nombre(); if(!n)return;
+      // Se abre Drive en el mismo toque (si no, el teléfono bloquea la ventana nueva).
+      var w=window.open(SIN_EDITAR,'_blank','noopener');
+      function ok(){ if(window.toast)toast('Nombre copiado · pégalo en la carpeta nueva'); }
+      function manual(){
+        try{var r=document.createRange();r.selectNodeContents($('upname'));var s=window.getSelection();s.removeAllRanges();s.addRange(r);}catch(e){}
+        if(window.toast)toast('Copia el nombre a mano (quedó seleccionado)');
+      }
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(n).then(ok,manual);
+        else{var ta=document.createElement('textarea');ta.value=n;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();
+          (document.execCommand('copy')?ok:manual)();ta.remove();}
+      }catch(e){manual();}
+      if(!w)location.href=SIN_EDITAR;
+    };
+
+    // El botón «+»
+    var fab=document.createElement('button'); fab.className='fab'; fab.setAttribute('aria-label','Subir material');
+    fab.innerHTML='<svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="fab-tip">Subir material</span>';
+    document.body.appendChild(fab);
+    fab.onclick=function(){ pintar(); openSheet('upsheet'); };
+  })();
+
+  // ── v5: portada en cinta para el teléfono ──
+  // Los reels pasan solos de derecha a izquierda; cada video suena (en silencio) solo mientras se ve.
+  (function(){
+    if(!window.matchMedia('(max-width:720px)').matches)return;
+    var box=$('reels'); if(!box)return;
+    var done=false;
+    function wrap(){
+      if(done||!box.children.length||box.querySelector('.reels-row'))return;
+      done=true;
+      var html=box.innerHTML;
+      box.innerHTML='<div class="reels-row">'+html+html+'</div>';
+      // Quitar videos que el código anterior haya creado y manejarlos por visibilidad.
+      box.querySelectorAll('video').forEach(function(v){v.pause();v.remove();});
+      box.querySelectorAll('img').forEach(function(i){i.classList.add('in');});
+      if(!('IntersectionObserver' in window))return;
+      var io=new IntersectionObserver(function(en){
+        en.forEach(function(x){
+          var t=x.target, id=t.getAttribute('data-v'), v=t.querySelector('video');
+          if(x.isIntersecting){
+            if(!v){
+              v=document.createElement('video'); v.muted=true; v.loop=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto';
+              v.addEventListener('playing',function(){v.classList.add('in');},{once:true});
+              v.src=id.indexOf('/')>=0?id:('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY);
+              t.appendChild(v);
+            }
+            var p=v.play(); if(p&&p.catch)p.catch(function(){});
+          } else if(v){ v.pause(); }
+        });
+      },{root:$('hero'),threshold:.35});
+      box.querySelectorAll('.reel[data-v]').forEach(function(t){io.observe(t);});
+    }
+    new MutationObserver(function(){wrap();}).observe(box,{childList:true});
+    wrap();
   })();
 </script>
 
