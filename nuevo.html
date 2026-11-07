@@ -2114,6 +2114,10 @@
   // (sede se omite si no aplica; grupo y evento en minúsculas con «_»; vacíos = sin_grupo / general).
   (function(){
     var SIN_EDITAR='https://drive.google.com/drive/folders/1vva8V2Ua9Aqe42Oe6NKVeZalpXpqJ7M4';
+    // Crear la carpeta en Drive desde aquí (script «registrarContenidoDrive», acción crearCarpeta).
+    // Se enciende cuando el script esté actualizado; si falla, vuelve a copiar nombre + abrir Drive.
+    var CREAR_ACTIVO=false;
+    var CREAR_URL=SYNC_URL.split('?')[0]+'?accion=crearCarpeta&clave=idea-galeria-subir-2026&nombre=';
     var NOMBRADOR='https://produccion.aeroidea.net/nombrador-de-carpetas-de-contenido/';
     // Cursos: nombre completo + sigla. El valor (código) es lo que va en el nombre de la carpeta y lo que
     // reconoce el catálogo (fórmula «Servicio normalizado» de la tabla 5500 en Airtable).
@@ -2139,12 +2143,12 @@
       ['TDC',['Inglés avanzado TDC','Boeing 737 (TDC)','Embraer 190 (TDC)','MD-80','Pasaporte al Golfo · Emirates','Etihad','Qatar','Estética y maquillaje']],
       ['Drones, crecimiento profesional y programas',['Drones agrícolas','Primeros auxilios','SMS','Mercancías peligrosas','Inducción docente','El arte de cerrar ventas','Experiencia de cliente 5 estrellas','Psicología de la influencia','El arte de convencer','PIC','IDEA Plus']]
     ];
-    function codigo(n){return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[()·\/]/g,' ').replace(/\s+/g,' ').trim().toUpperCase();}
+    function codigo(n){return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();}
     var SEDES=[['BRM','Barquisimeto'],['CCS','Caracas'],['CHA','Charallave'],['MAR','Maracaibo'],['PMV','Margarita'],['SCI','San Cristóbal'],['VLN','Valencia'],['','Sin sede']];
     var PH=['grupo','fecha','evento','sede','servicio','ano','anio','tipo_de_evento'];
     function limpiar(t){
       if(!t)return '';
-      var v=String(t).trim().replace(/[()]/g,'').replace(/\s*-\s*/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'').toLowerCase();
+      var v=String(t).trim().replace(/[()]/g,'').replace(/\s*-\s*/g,'_').replace(/\s+/g,'_').toLowerCase().replace(/[^a-z0-9_áéíóúüñ]/g,'').replace(/_+/g,'_').replace(/^_|_$/g,'');
       return PH.indexOf(v)!==-1?'':v;
     }
     function hoy(){var h=new Date();return h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-'+String(h.getDate()).padStart(2,'0');}
@@ -2200,8 +2204,33 @@
     $('upsede').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.d=b.getAttribute('data-v');pintar();};
     ['upfecha','upgrupo','upevento'].forEach(function(id){$(id).addEventListener('input',pintar);});
 
+    if(CREAR_ACTIVO){
+      $('upgo').innerHTML=ic('external')+'Crear carpeta y abrir Drive';
+      var how=document.querySelector('#upsheet .up-how');
+      if(how)how.innerHTML='<li><b>1</b><span>Toca el botón: se crea la carpeta con este nombre y se abre en Drive.</span></li><li><b>2</b><span>Sube ahí las fotos y videos. Listo.</span></li>';
+    }
+    function copiarYAbrir(n,w){
+      if(w)w.location.href=SIN_EDITAR; else w=window.open(SIN_EDITAR,'_blank');
+      function ok(){ if(window.toast)toast('Nombre copiado · pégalo en la carpeta nueva'); }
+      try{ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(n).then(ok,function(){}); }catch(e){}
+      if(!w)location.href=SIN_EDITAR;
+    }
     $('upgo').onclick=function(){
       var n=nombre(); if(!n)return;
+      if(CREAR_ACTIVO){
+        var btn=this, w=window.open('about:blank','_blank');
+        if(w){try{w.document.write('<p style="font:16px system-ui;padding:24px;color:#01275C">Creando la carpeta en Drive…</p>');}catch(e){}}
+        btn.disabled=true; btn.innerHTML=ic('loader')+'Creando carpeta…';
+        fetch(CREAR_URL+encodeURIComponent(n),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+          if(!d||!d.ok||!d.url)throw new Error(d&&d.error||'sin respuesta');
+          if(w)w.location.href=d.url; else location.href=d.url;
+          if(window.toast)toast(d.nueva?'Carpeta creada · sube ahí el material':'La carpeta ya existía · se abrió en Drive');
+        }).catch(function(){
+          if(window.toast)toast('No se pudo crear sola: pega el nombre en una carpeta nueva');
+          copiarYAbrir(n,w);
+        }).then(function(){ btn.disabled=false; btn.innerHTML=ic('external')+'Crear carpeta y abrir Drive'; pintar(); });
+        return;
+      }
       // Se abre Drive en el mismo toque (si no, el teléfono bloquea la ventana nueva).
       var w=window.open(SIN_EDITAR,'_blank','noopener');
       function ok(){ if(window.toast)toast('Nombre copiado · pégalo en la carpeta nueva'); }
