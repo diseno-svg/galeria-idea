@@ -850,6 +850,7 @@
   .up-sel.set{border-color:#fff;background-color:rgba(255,255,255,.28)}
   .up-warn{display:none;margin:10px 0 0;padding:10px 12px;border-radius:10px;background:rgba(252,183,45,.18);border:1px solid rgba(252,183,45,.5);color:#fff;font-size:12.5px;line-height:1.45}
   .up-hint{margin:8px 2px 0;font-size:12.5px;line-height:1.45;color:var(--muted)}
+  #upsheet.modo-ed .up-noed,#upsheet.modo-ed #uprow{display:none!important}
 </style>
 </head>
 <body>
@@ -2166,7 +2167,7 @@
         '<div class="up-lbl">O curso especial</div><select class="up-in up-sel" id="upesp"><option value="">Elige un curso especial…</option>'+ESP.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(n){return '<option value="'+esc(codigo(n))+'">'+esc(n)+'</option>';}).join('')+'</optgroup>';}).join('')+'</select>'+
         '<div class="up-lbl">Sede</div><div class="up-chips" id="upsede">'+SEDES.map(function(s){return '<button class="up-chip" data-v="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
         '<div class="up-lbl">Fecha de la captura</div><input class="up-in" type="date" id="upfecha">'+
-        '<div class="up-lbl">¿Qué vas a subir?</div><div class="up-chips" id="uptipo"><button class="up-chip on" data-v="general">Material general del curso</button><button class="up-chip" data-v="evento">De un evento o grupo</button></div>'+
+        '<div class="up-lbl">¿Qué vas a subir?</div><div class="up-chips" id="uptipo"><button class="up-chip on" data-v="general">Material general del curso</button><button class="up-chip" data-v="evento">De un evento o grupo</button><button class="up-chip" data-v="editado">Video editado (pieza terminada)</button></div>'+
         '<p class="up-hint" id="uphint">Fotos y videos del curso que no son de una actividad en particular. La carpeta se marca como «general».</p>'+
         '<div class="up-row" id="uprow" style="display:none">'+
           '<div><div class="up-lbl">Grupo <small>opcional</small></div><input class="up-in" id="upgrupo" placeholder="TDC-91-MJ-AB" autocomplete="off" autocapitalize="characters"></div>'+
@@ -2196,6 +2197,15 @@
       [].forEach.call($('upsede').children,function(b){b.classList.toggle('on',st.d!==null&&b.getAttribute('data-v')===st.d);});
       var n=nombre(), out=$('upname');
       out.textContent=n||(!st.s?'Elige el curso':'Elige la sede'); out.classList.toggle('empty',!n);
+      if(MODO==='editado'){
+        var lb=(SEDES.find(function(x){return x[0]===st.d;})||[])[1];
+        $('upgo').disabled=(st.d===null);
+        $('upgo').innerHTML=ic('external')+(st.d===null?'Elige la sede':(EDITADO[st.d]?'Abrir Editado · '+lb:'Abrir la carpeta Editado'));
+        $('ust1').classList.add('on'); $('ust2').classList.toggle('on',st.d!==null); $('ust3').classList.toggle('on',st.d!==null);
+        return;
+      } else if($('upgo').textContent.indexOf('Editado')>=0||$('upgo').textContent==='Elige la sede'){
+        $('upgo').innerHTML=ic('external')+(CREAR_ACTIVO?'Crear carpeta y abrir Drive':'Copiar nombre y abrir Drive');
+      }
       var conocido=REG.some(function(r){return r[0]===st.s&&!r[3];});
       $('upwarn').style.display=(n&&(!conocido||st.d==='CHA'))?'block':'none';
       $('upgo').disabled=!n;
@@ -2206,13 +2216,30 @@
     $('upesp').onchange=function(){st.s=this.value;pintar();};
     $('upsede').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.d=b.getAttribute('data-v');pintar();};
     ['upfecha','upgrupo','upevento'].forEach(function(id){$(id).addEventListener('input',pintar);});
+    // Carpetas de cada sede dentro de PUBLICIDAD › Editado (las piezas terminadas van ahí directo, sin subcarpetas).
+    var EDITADO_RAIZ='https://drive.google.com/drive/folders/1yJVzwrJVgTlDIve6L4FQjHBB2Qvqpyxk';
+    var EDITADO={BRM:'1J5vkFbE4jLDaB7vW1nNIPtPfFk8cHoqT',CCS:'1Lssb2weJCn4pH6bpjSqNJ6L_tQH30QjJ',MAR:'1-6FYpBWjhaWh65Q3kHvjbPVU4AS1vrEE',
+      PMV:'18KBggRfUKBstYt9uSkR42NGUQ0u--X2p',SCI:'1QDJFsRuJFCcvB3e9SBW0VCN7TZnMNhFT',VLN:'1ApV4HfDoKpcjFFAqkAkxiCCOEqwybmAZ'};
+    var MODO='general';
+    // La pregunta «¿Qué vas a subir?» va de primera; con «Video editado» solo hace falta la sede.
+    (function(){
+      var body=document.querySelector('#upsheet .sheet-body'), steps=body.querySelector('.up-steps');
+      var t=$('uptipo'), lbl=t.previousElementSibling, hint=$('uphint');
+      steps.insertAdjacentElement('afterend',hint); steps.insertAdjacentElement('afterend',t); steps.insertAdjacentElement('afterend',lbl);
+      [$('upserv'),$('upesp'),$('upfecha')].forEach(function(el){el.classList.add('up-noed');el.previousElementSibling.classList.add('up-noed');});
+      ['.up-out','#upwarn','.up-how'].forEach(function(q){var el=body.querySelector(q); if(el)el.classList.add('up-noed');});
+    })();
+    var HINT={general:'Fotos y videos del curso que no son de una actividad en particular. La carpeta se marca como «general».',
+      evento:'Escribe el grupo y/o qué se estaba haciendo (por ejemplo «práctica de evacuación»).',
+      editado:'Para videos ya terminados. Elige la sede y se abre su carpeta dentro de «Editado»: súbelo ahí directo, sin crear carpetas.'};
     $('uptipo').onclick=function(e){
       var b=e.target.closest('.up-chip'); if(!b)return;
-      var ev=b.getAttribute('data-v')==='evento';
+      MODO=b.getAttribute('data-v');
       [].forEach.call(this.children,function(c){c.classList.toggle('on',c===b);});
-      $('uprow').style.display=ev?'':'none';
-      $('uphint').textContent=ev?'Escribe el grupo y/o qué se estaba haciendo (por ejemplo «práctica de evacuación»).':'Fotos y videos del curso que no son de una actividad en particular. La carpeta se marca como «general».';
-      if(!ev){$('upgrupo').value='';$('upevento').value='';}
+      $('uprow').style.display=MODO==='evento'?'':'none';
+      $('uphint').textContent=HINT[MODO];
+      $('upsheet').classList.toggle('modo-ed',MODO==='editado');
+      if(MODO!=='evento'){$('upgrupo').value='';$('upevento').value='';}
       else setTimeout(function(){$('upevento').focus();},50);
       pintar();
     };
@@ -2229,6 +2256,13 @@
       if(!w)location.href=SIN_EDITAR;
     }
     $('upgo').onclick=function(){
+      if(MODO==='editado'){
+        if(st.d===null)return;
+        var url=EDITADO[st.d]?'https://drive.google.com/drive/folders/'+EDITADO[st.d]:EDITADO_RAIZ;
+        var we=window.open(url,'_blank'); if(!we)location.href=url;
+        if(window.toast)toast(EDITADO[st.d]?'Sube el video ahí directo, sin crear carpetas':'Esa sede no tiene carpeta propia: súbelo en Editado y avisa a Diseño');
+        return;
+      }
       var n=nombre(); if(!n)return;
       if(CREAR_ACTIVO){
         var btn=this, w=window.open('about:blank','_blank');
