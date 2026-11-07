@@ -2197,7 +2197,7 @@
       [].forEach.call($('upsede').children,function(b){b.classList.toggle('on',st.d!==null&&b.getAttribute('data-v')===st.d);});
       var n=nombre(), out=$('upname');
       out.textContent=n||(!st.s?'Elige el curso':'Elige la sede'); out.classList.toggle('empty',!n);
-      if(MODO==='editado'){
+      if(MODO==='editado'&&!EDITADO_CREAR){
         var lb=(SEDES.find(function(x){return x[0]===st.d;})||[])[1];
         $('upgo').disabled=(st.d===null);
         $('upgo').innerHTML=ic('external')+(st.d===null?'Elige la sede':(EDITADO[st.d]?'Abrir Editado · '+lb:'Abrir la carpeta Editado'));
@@ -2206,6 +2206,8 @@
       } else if($('upgo').textContent.indexOf('Editado')>=0||$('upgo').textContent==='Elige la sede'){
         $('upgo').innerHTML=ic('external')+(CREAR_ACTIVO?'Crear carpeta y abrir Drive':'Copiar nombre y abrir Drive');
       }
+      if(CREAR_ACTIVO&&!$('upgo').disabled&&$('upgo').textContent.indexOf('Creando')<0)
+        $('upgo').innerHTML=ic('external')+(MODO==='editado'?'Crear carpeta en Editado y abrir Drive':'Crear carpeta y abrir Drive');
       var conocido=REG.some(function(r){return r[0]===st.s&&!r[3];});
       $('upwarn').style.display=(n&&(!conocido||st.d==='CHA'))?'block':'none';
       $('upgo').disabled=!n;
@@ -2221,6 +2223,9 @@
     var EDITADO={BRM:'1J5vkFbE4jLDaB7vW1nNIPtPfFk8cHoqT',CCS:'1Lssb2weJCn4pH6bpjSqNJ6L_tQH30QjJ',MAR:'1-6FYpBWjhaWh65Q3kHvjbPVU4AS1vrEE',
       PMV:'18KBggRfUKBstYt9uSkR42NGUQ0u--X2p',SCI:'1QDJFsRuJFCcvB3e9SBW0VCN7TZnMNhFT',VLN:'1ApV4HfDoKpcjFFAqkAkxiCCOEqwybmAZ'};
     var MODO='general';
+    // Video editado con carpeta propia dentro de «Editado» (curso, sede, fecha y título quedan en el nombre).
+    // Se enciende cuando el script esté publicado con destino=editado; mientras, abre la carpeta de la sede.
+    var EDITADO_CREAR=false;
     // La pregunta «¿Qué vas a subir?» va de primera; con «Video editado» solo hace falta la sede.
     (function(){
       var body=document.querySelector('#upsheet .sheet-body'), steps=body.querySelector('.up-steps');
@@ -2236,10 +2241,11 @@
       var b=e.target.closest('.up-chip'); if(!b)return;
       MODO=b.getAttribute('data-v');
       [].forEach.call(this.children,function(c){c.classList.toggle('on',c===b);});
-      $('uprow').style.display=MODO==='evento'?'':'none';
-      $('uphint').textContent=HINT[MODO];
-      $('upsheet').classList.toggle('modo-ed',MODO==='editado');
-      if(MODO!=='evento'){$('upgrupo').value='';$('upevento').value='';}
+      var conCampos=MODO==='evento'||(MODO==='editado'&&EDITADO_CREAR);
+      $('uprow').style.display=conCampos?'':'none';
+      $('uphint').textContent=(MODO==='editado'&&EDITADO_CREAR)?'Para videos ya terminados. Elige curso y sede, y escribe en «Evento» el título de la pieza (por ejemplo «reel práctica de motores»). La carpeta se crea dentro de «Editado».':HINT[MODO];
+      $('upsheet').classList.toggle('modo-ed',MODO==='editado'&&!EDITADO_CREAR);
+      if(!conCampos){$('upgrupo').value='';$('upevento').value='';}
       else setTimeout(function(){$('upevento').focus();},50);
       pintar();
     };
@@ -2250,13 +2256,14 @@
       if(how)how.innerHTML='<li><b>1</b><span>Toca el botón: se crea la carpeta con este nombre y se abre en Drive.</span></li><li><b>2</b><span>Sube ahí las fotos y videos. Listo.</span></li>';
     }
     function copiarYAbrir(n,w){
-      if(w)w.location.href=SIN_EDITAR; else w=window.open(SIN_EDITAR,'_blank');
+      var destino=(MODO==='editado')?EDITADO_RAIZ:SIN_EDITAR;
+      if(w)w.location.href=destino; else w=window.open(destino,'_blank');
       function ok(){ if(window.toast)toast('Nombre copiado · pégalo en la carpeta nueva'); }
       try{ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(n).then(ok,function(){}); }catch(e){}
-      if(!w)location.href=SIN_EDITAR;
+      if(!w)location.href=destino;
     }
     $('upgo').onclick=function(){
-      if(MODO==='editado'){
+      if(MODO==='editado'&&!EDITADO_CREAR){
         if(st.d===null)return;
         var url=EDITADO[st.d]?'https://drive.google.com/drive/folders/'+EDITADO[st.d]:EDITADO_RAIZ;
         var we=window.open(url,'_blank'); if(!we)location.href=url;
@@ -2268,8 +2275,9 @@
         var btn=this, w=window.open('about:blank','_blank');
         if(w){try{w.document.write('<p style="font:16px system-ui;padding:24px;color:#01275C">Creando la carpeta en Drive…</p>');}catch(e){}}
         btn.disabled=true; btn.innerHTML=ic('loader')+'Creando carpeta…';
-        fetch(CREAR_URL+encodeURIComponent(n),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+        fetch(CREAR_URL+encodeURIComponent(n)+(MODO==='editado'?'&destino=editado':''),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
           if(!d||!d.ok||!d.url)throw new Error(d&&d.error||'sin respuesta');
+          if(MODO==='editado'&&!/editad/i.test(d.padre||''))throw new Error('no quedó en Editado');
           if(w)w.location.href=d.url; else location.href=d.url;
           if(window.toast)toast(d.nueva?'Carpeta creada · sube ahí el material':'La carpeta ya existía · se abrió en Drive');
         }).catch(function(){
