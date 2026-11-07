@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Galería IDEA — Contenido</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#E8F2FB">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Galería IDEA">
@@ -747,6 +747,25 @@
     .totop{right:21px;bottom:calc(84px + env(safe-area-inset-bottom));width:44px;height:44px}
   }
   @media (prefers-reduced-motion:reduce){ .reels-row{animation:none} .fab{animation:none} }
+  /* ── v6: fondo celeste en degradado (pedido de Víctor; el celeste no está en la paleta del manual) ── */
+  :root{--bg:#E4F0FA}
+  html{background:#E4F0FA}
+  .bgfx{background:linear-gradient(180deg,#E3F0FB 0%,#C4DDF2 40%,#D6E9F7 72%,#E9F3FC 100%)!important}
+  .bgfx::before,.bgfx::after{content:"";position:absolute;border-radius:50%;filter:blur(10px);will-change:transform}
+  .bgfx::before{width:70vmax;height:55vmax;left:-20vmax;top:-22vmax;
+    background:radial-gradient(closest-side,rgba(120,175,225,.55),transparent);animation:sky1 24s ease-in-out infinite alternate}
+  .bgfx::after{width:60vmax;height:50vmax;right:-22vmax;top:35vh;
+    background:radial-gradient(closest-side,rgba(160,210,245,.6),transparent);animation:sky2 30s ease-in-out infinite alternate}
+  @keyframes sky1{to{transform:translate3d(14vmax,8vmax,0) scale(1.1)}}
+  @keyframes sky2{to{transform:translate3d(-12vmax,-10vmax,0) scale(.92)}}
+  .hdr{background:rgba(255,255,255,.62);border-bottom-color:rgba(1,39,92,.08)}
+  .search input,.ibtn,.fbtn,.seg{background:rgba(255,255,255,.7)}
+  .search input:focus{background:#fff}
+  .seg-ind{background:#fff}
+  .pill:hover{background:rgba(255,255,255,.7)}
+  .card{background:#DDE9F4}
+  .card .ph.spin{background:linear-gradient(110deg,#DDE9F4 30%,#EEF5FC 50%,#DDE9F4 70%);background-size:200% 100%}
+  @media (prefers-reduced-motion:reduce){ .bgfx::before,.bgfx::after{animation:none} }
 </style>
 </head>
 <body>
