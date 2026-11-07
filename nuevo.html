@@ -1169,17 +1169,35 @@
   function ic(name,cls){return '<svg class="ic'+(cls?' '+cls:'')+'" aria-hidden="true"><use href="#i-'+name+'"/></svg>';}
   function fmtN(n){try{return n.toLocaleString('es-VE');}catch(e){return String(n);}}
 
-  function cargarDatos(cb){
+  // Catálogo: si Drive falla un momento (503, 429…), reintenta solo; si sigue fallando,
+  // muestra la última copia guardada en este equipo para que la galería no se quede en «Cargando…».
+  var DATOS_CACHE='idea.galeria.datos';
+  function usarDatos(data){
+    CAL=data.calendario||[];
+    onData(data.contenido||[]);
+    marcarActualizado(data.actualizado);
+    hideSplash();
+  }
+  function cargarDatos(cb,intento){
+    intento=intento||0;
     fetch(DATOS_URL,{cache:'no-store'}).then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
     }).then(function(data){
-      CAL=data.calendario||[];
-      onData(data.contenido||[]);
-      marcarActualizado(data.actualizado);
-      hideSplash();
+      usarDatos(data);
+      try{ localStorage.setItem(DATOS_CACHE,JSON.stringify(data)); }catch(e){}
       if(cb)cb(null);
-    }).catch(function(e){ hideSplash(); if(cb)cb(e); else onErr(e); });
+    }).catch(function(e){
+      if(intento<3){ setTimeout(function(){cargarDatos(cb,intento+1);},[1500,4000,9000][intento]); return; }
+      var guardado=null; try{ guardado=JSON.parse(localStorage.getItem(DATOS_CACHE)||'null'); }catch(x){}
+      if(guardado&&guardado.contenido){
+        usarDatos(guardado);
+        if(window.toast)setTimeout(function(){toast('Drive no respondió: mostrando la última copia guardada');},1200);
+        if(cb)cb(null);
+        return;
+      }
+      hideSplash(); if(cb)cb(e); else onErr(e);
+    });
   }
   function marcarActualizado(iso){
     var el=$('updinfo'); if(!el||!iso)return;
@@ -2128,7 +2146,8 @@
         var fs=shuffle(PORTADA_FOTOS.map(function(n){return {tipo:'Foto',poster:'portada/'+n+'.jpg'};}));
         // Piezas publicadas: videos editados (MP4) de la carpeta «Editado» de la galería.
         var okd=function(r){return r.driveId&&r.driveId.indexOf('gphotos:')!==0;};
-        var eds=shuffle(ALL.filter(function(r){return okd(r)&&r.estado==='Listo'&&r.tipo==='Video'&&/\.mp4$/i.test(r.nombre);})).slice(0,phone?4:8);
+        // (No se transmiten videos de Drive aquí: comparten la clave del catálogo y lo saturan.)
+        var eds=[];
         var vids=shuffle(vs.concat(eds)), pick=[], fi=0;
         // Una sola franja continua: videos, con una foto cada tres.
         vids.forEach(function(v,k){ pick.push(v); if(k%3===2&&fi<fs.length)pick.push(fs[fi++]); });
