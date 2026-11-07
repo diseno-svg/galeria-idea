@@ -843,6 +843,12 @@
   .mitem b{color:#fff}
   .mitem small{color:var(--muted)}
   .scrim{background:rgba(1,23,55,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .up-chip small{font-size:11px;font-weight:600;opacity:.65;margin-left:2px}
+  .up-sel{padding-right:38px;background-image:linear-gradient(45deg,transparent 50%,#fff 50%),linear-gradient(135deg,#fff 50%,transparent 50%);
+    background-position:calc(100% - 20px) 52%,calc(100% - 14px) 52%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;cursor:pointer}
+  .up-sel option,.up-sel optgroup{color:#01275C;background:#fff}
+  .up-sel.set{border-color:#fff;background-color:rgba(255,255,255,.28)}
+  .up-warn{display:none;margin:10px 0 0;padding:10px 12px;border-radius:10px;background:rgba(252,183,45,.18);border:1px solid rgba(252,183,45,.5);color:#fff;font-size:12.5px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -2109,9 +2115,32 @@
   (function(){
     var SIN_EDITAR='https://drive.google.com/drive/folders/1vva8V2Ua9Aqe42Oe6NKVeZalpXpqJ7M4';
     var NOMBRADOR='https://produccion.aeroidea.net/nombrador-de-carpetas-de-contenido/';
-    var SERV=['TDC','TMA','PILOTO','DESPACHADOR','INGLES','AVIONICA','NEURO ORATORIA','OMA','BISTRO','INSTITUCIONAL'];
-    var SERV_LBL={'PILOTO':'Piloto','DESPACHADOR':'Despachador','INGLES':'Inglés','AVIONICA':'Aviónica','NEURO ORATORIA':'Neuro Oratoria','BISTRO':'Bistró','INSTITUCIONAL':'Institucional'};
-    var SEDES=[['BRM','Barquisimeto'],['CCS','Caracas'],['MAR','Maracaibo'],['PMV','Margarita'],['SCI','San Cristóbal'],['VLN','Valencia'],['','Sin sede']];
+    // Cursos: nombre completo + sigla. El valor (código) es lo que va en el nombre de la carpeta y lo que
+    // reconoce el catálogo (fórmula «Servicio normalizado» de la tabla 5500 en Airtable).
+    // Los marcados nuevo:1 todavía no los reconoce el catálogo: quedan en «⚠ revisar» hasta actualizar esa fórmula.
+    var REG=[
+      ['PILOTO','Piloto Privado y Comercial','PPA · PCA'],
+      ['TDC','Tripulante de Cabina','TDC'],
+      ['TMA','Técnico de Mantenimiento de Aeronaves','TMA'],
+      ['DESPACHADOR','Despachador de Vuelo','DDV'],
+      ['RPA','Piloto de Drones','RPA',1],
+      ['INGLES','Inglés','ING'],
+      ['CIA','CIA','',1],
+      ['AVIONICA','Aviónica','',0],
+      ['NEURO ORATORIA','Neuro Oratoria','',0],
+      ['OMA','Organización de Mantenimiento Aeronáutico','OMA'],
+      ['BISTRO','Bistró','',0],
+      ['INSTITUCIONAL','Institucional','',1]
+    ];
+    // Cursos y servicios especiales (lista de Producción · Directorio de las gavetas 04, 03/11/2026).
+    var ESP=[
+      ['Pilotos',['Cessna 172','Mooney 20','Diamond DA20','Cessna 182','Grand Caravan 208','Piper Cheyenne IIXL','Citation II','Aerocommander','King Air','Monomotor','Multimotor','Vuelo instrumental (HVI)','Instructor de vuelo','Instructor de simulador','Factor humano','SRM','Transición a Jet','PBN','RVSM','Garmin 1000','Aviones Complex','Inglés OACI','Inglés VFR']],
+      ['TMA',['Motopropulsor','Motor a turbina','Citation 500-550-560','Embraer 190 (TMA)','Boeing 737 Classic','Westwind 1124','Piper PA31T / PA42','Aerocommander 500','Learjet 30/40/55','SA 350 Dauphin','Cessna 100-400','Bell 206','King Air 90-300','Engine Trend Monitoring','PT6A','CFM56','APU','Diagramas técnicos','Pitot / ELT / transponder','HSI','Acabado y pintura','Certificado de aeronavegabilidad','Técnicas de inspección','Incoming Inspection','Derecho para TMA','Factores humanos TMA','Inglés técnico TMA','Garmin 1000 (TMA)']],
+      ['TDC',['Inglés avanzado TDC','Boeing 737 (TDC)','Embraer 190 (TDC)','MD-80','Pasaporte al Golfo · Emirates','Etihad','Qatar','Estética y maquillaje']],
+      ['Drones, crecimiento profesional y programas',['Drones agrícolas','Primeros auxilios','SMS','Mercancías peligrosas','Inducción docente','El arte de cerrar ventas','Experiencia de cliente 5 estrellas','Psicología de la influencia','El arte de convencer','PIC','IDEA Plus']]
+    ];
+    function codigo(n){return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[()·\/]/g,' ').replace(/\s+/g,' ').trim().toUpperCase();}
+    var SEDES=[['BRM','Barquisimeto'],['CCS','Caracas'],['CHA','Charallave'],['MAR','Maracaibo'],['PMV','Margarita'],['SCI','San Cristóbal'],['VLN','Valencia'],['','Sin sede']];
     var PH=['grupo','fecha','evento','sede','servicio','ano','anio','tipo_de_evento'];
     function limpiar(t){
       if(!t)return '';
@@ -2128,7 +2157,8 @@
       '<div class="sheet-head"><h2>Subir material</h2><button class="ibtn" data-close aria-label="Cerrar">'+ic('x')+'</button></div>'+
       '<div class="sheet-body">'+
         '<div class="up-steps"><i id="ust1"></i><i id="ust2"></i><i id="ust3"></i></div>'+
-        '<div class="up-lbl">Curso</div><div class="up-chips" id="upserv">'+SERV.map(function(s){return '<button class="up-chip" data-v="'+s+'">'+(SERV_LBL[s]||s)+'</button>';}).join('')+'</div>'+
+        '<div class="up-lbl">Curso regular</div><div class="up-chips" id="upserv">'+REG.map(function(r){return '<button class="up-chip" data-v="'+r[0]+'">'+r[1]+(r[2]?' <small>'+r[2]+'</small>':'')+'</button>';}).join('')+'</div>'+
+        '<div class="up-lbl">O curso especial</div><select class="up-in up-sel" id="upesp"><option value="">Elige un curso especial…</option>'+ESP.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(n){return '<option value="'+esc(codigo(n))+'">'+esc(n)+'</option>';}).join('')+'</optgroup>';}).join('')+'</select>'+
         '<div class="up-lbl">Sede</div><div class="up-chips" id="upsede">'+SEDES.map(function(s){return '<button class="up-chip" data-v="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
         '<div class="up-lbl">Fecha de la captura</div><input class="up-in" type="date" id="upfecha">'+
         '<div class="up-row">'+
@@ -2136,6 +2166,7 @@
           '<div><div class="up-lbl">Evento <small>opcional</small></div><input class="up-in" id="upevento" placeholder="práctica de incendios" autocomplete="off"></div>'+
         '</div>'+
         '<div class="up-out"><small>Nombre de la carpeta</small><code id="upname" class="empty">Elige curso y sede</code></div>'+
+        '<p class="up-warn" id="upwarn">Este curso o sede es nuevo en el catálogo: el material se sube igual, pero Diseño lo clasifica a mano hasta que se actualice el registro.</p>'+
         '<ol class="up-how"><li><b>1</b><span>Toca el botón: el nombre se copia y se abre «Sin Editar» en Drive.</span></li>'+
         '<li><b>2</b><span>Crea una carpeta nueva y pega el nombre tal cual.</span></li>'+
         '<li><b>3</b><span>Sube adentro las fotos y videos. Al día siguiente aparecen en la galería.</span></li></ol>'+
@@ -2154,14 +2185,18 @@
     }
     function pintar(){
       [].forEach.call($('upserv').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')===st.s);});
+      var esp=$('upesp'); esp.value=[].some.call(esp.options,function(o){return o.value&&o.value===st.s;})?st.s:''; esp.classList.toggle('set',!!esp.value);
       [].forEach.call($('upsede').children,function(b){b.classList.toggle('on',st.d!==null&&b.getAttribute('data-v')===st.d);});
       var n=nombre(), out=$('upname');
       out.textContent=n||(!st.s?'Elige el curso':'Elige la sede'); out.classList.toggle('empty',!n);
+      var conocido=REG.some(function(r){return r[0]===st.s&&!r[3];});
+      $('upwarn').style.display=(n&&(!conocido||st.d==='CHA'))?'block':'none';
       $('upgo').disabled=!n;
       $('ust1').classList.toggle('on',!!st.s); $('ust2').classList.toggle('on',st.d!==null); $('ust3').classList.toggle('on',!!n);
       try{localStorage.setItem('idea.up',JSON.stringify({s:st.s,d:st.d}));}catch(e){}
     }
     $('upserv').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.s=b.getAttribute('data-v');pintar();};
+    $('upesp').onchange=function(){st.s=this.value;pintar();};
     $('upsede').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.d=b.getAttribute('data-v');pintar();};
     ['upfecha','upgrupo','upevento'].forEach(function(id){$(id).addEventListener('input',pintar);});
 
