@@ -933,6 +933,39 @@
     .blob,.hdr,.hero h1 .ch,.reel,.hello .wave{animation:none!important}
     .hero,.hero *{transition:none!important;opacity:1!important;filter:none!important;transform:none!important}
   }
+  /* ── v9: franja única de reels, degradado más fuerte y título siempre vivo ── */
+  .bgfx{background:linear-gradient(160deg,#63B3F2 0%,#2E6FC4 38%,#164C9C 68%,#0A2F6E 100%)!important}
+  .blob{opacity:.95}
+  .blob.b1{background:radial-gradient(circle,#BDE6FF 0%,rgba(189,230,255,0) 70%)}
+  .blob.b3{background:radial-gradient(circle,#7FCBFF 0%,rgba(127,203,255,0) 70%)}
+  .blob.b2{background:radial-gradient(circle,#082A66 0%,rgba(8,42,102,0) 70%)}
+  .blob.b4{background:radial-gradient(circle,#061F52 0%,rgba(6,31,82,0) 70%);opacity:.85}
+  .hdr{background:rgba(12,52,110,.38)}
+  /* Una sola franja de punta a punta, sin huecos */
+  .reels{display:block!important;gap:0}
+  .reels-row{position:absolute;left:0;top:0;bottom:0;height:100%!important;display:flex;width:max-content;transform:none;
+    animation:franja 110s linear infinite;opacity:0;transition:opacity 1.4s ease .2s}
+  .hero.go .reels-row{opacity:1}
+  .reels-row .reel{height:100%!important;margin:0!important;border-radius:0!important;animation:none!important;opacity:1!important;flex:none}
+  @keyframes franja{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media(max-width:720px){ .reels-row{animation-duration:70s} }
+  .hero::before{background:radial-gradient(ellipse 62% 58% at center,rgba(4,26,64,.82) 0%,rgba(4,26,64,.5) 58%,rgba(4,26,64,.28) 100%)}
+  .hello{display:none!important}
+  /* Título vivo: las letras se mecen en ola cada pocos segundos */
+  .hero.go h1 .ch{animation:chIn .9s var(--ease) forwards,ola 7s ease-in-out infinite;animation-delay:calc(.75s + var(--i) * 40ms),calc(3s + var(--i) * 70ms)}
+  .hero.go h1 span.gold .ch{animation:chIn .9s var(--ease) forwards,ola 7s ease-in-out infinite,glow 3.2s ease-in-out infinite;
+    animation-delay:calc(.75s + var(--i) * 40ms),calc(3s + var(--i) * 70ms),calc(2.6s + var(--i) * 90ms)}
+  @keyframes ola{0%,82%,100%{transform:none}88%{transform:translateY(-.12em) rotate(-3deg)}94%{transform:translateY(.03em)}}
+  .tline{position:relative;width:min(440px,72%);height:2px;margin:16px auto 0;border-radius:2px;
+    background:linear-gradient(90deg,rgba(252,183,45,0),rgba(252,183,45,.95) 50%,rgba(252,183,45,0));opacity:0;transform:scaleX(0);
+    transition:opacity .8s ease 1.5s,transform 1s var(--ease) 1.5s}
+  .hero.go .tline{opacity:1;transform:none}
+  .tline .pl{position:absolute;top:50%;left:0;width:22px;height:22px;fill:none;stroke:#FCB72D;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+    transform:translate(-50%,-50%) rotate(45deg);filter:drop-shadow(0 0 6px rgba(252,183,45,.7));opacity:0}
+  .hero.go .tline .pl{animation:vuela 6.5s ease-in-out 2.6s infinite}
+  @keyframes vuela{0%{left:0;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:100%;opacity:0}}
+  .hero.go .quote{transition-delay:1.8s}
+  @media (prefers-reduced-motion:reduce){ .reels-row,.tline .pl,.hero h1 .ch{animation:none!important} .reels-row{opacity:1} }
 </style>
 </head>
 <body>
@@ -2064,9 +2097,13 @@
       if(LOCAL){
         var vs=shuffle(PORTADA_VIDEOS.map(function(n){return {tipo:'Video',src:'portada/'+n+'.mp4',poster:'portada/'+n+'.jpg'};}));
         var fs=shuffle(PORTADA_FOTOS.map(function(n){return {tipo:'Foto',poster:'portada/'+n+'.jpg'};}));
-        var n=phone?5:9, pick=[], vi=0, fi=0;
-        for(var k=0;k<n;k++){ var wantV=(k%2===0); if((wantV&&vi<vs.length)||fi>=fs.length)pick.push(vs[vi++]); else pick.push(fs[fi++]); }
-        paint(pick); if(!lite&&!phone)startVideos(vs.slice(vi));
+        // Piezas publicadas: videos editados (MP4) de la carpeta «Editado» de la galería.
+        var okd=function(r){return r.driveId&&r.driveId.indexOf('gphotos:')!==0;};
+        var eds=shuffle(ALL.filter(function(r){return okd(r)&&r.estado==='Listo'&&r.tipo==='Video'&&/\.mp4$/i.test(r.nombre);})).slice(0,phone?4:8);
+        var vids=shuffle(vs.concat(eds)), pick=[], fi=0;
+        // Una sola franja continua: videos, con una foto cada tres.
+        vids.forEach(function(v,k){ pick.push(v); if(k%3===2&&fi<fs.length)pick.push(fs[fi++]); });
+        paint(pick);
         return;
       }
       if(PORTADA_FOLDER){
@@ -2390,10 +2427,9 @@
     fab.onclick=function(){ pintar(); openSheet('upsheet'); };
   })();
 
-  // ── v5: portada en cinta para el teléfono ──
+  // ── Portada en una sola franja continua (teléfono y computadora) ──
   // Los reels pasan solos de derecha a izquierda; cada video suena (en silencio) solo mientras se ve.
   (function(){
-    if(!window.matchMedia('(max-width:720px)').matches)return;
     var box=$('reels'); if(!box)return;
     var done=false;
     function wrap(){
@@ -2467,8 +2503,9 @@
     var SUBS=['Este es tu espacio creativo.','Hoy es un buen día para crear algo que despegue.','Tu próxima gran pieza empieza aquí.',
       'Aquí está todo lo que necesitas para contar la historia.','Que tus ideas vuelen alto hoy.'];
     var hello=document.createElement('div'); hello.className='hello';
-    var kicker=hero.querySelector('.hero-kicker'); kicker.textContent='Espacio creativo · IDEA';
-    kicker.insertAdjacentElement('afterend',hello);
+    var kicker=hero.querySelector('.hero-kicker'); kicker.textContent='IDEA Aviation Corporation';
+    // Línea con un avión que cruza debajo del título.
+    if(h1&&!hero.querySelector('.tline')){var tl=document.createElement('div');tl.className='tline';tl.innerHTML='<svg class="pl" viewBox="0 0 24 24"><use href="#i-plane"/></svg>';h1.insertAdjacentElement('afterend',tl);}
     function esc2(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
     function pintarHola(){
       var n=leer(), sub=SUBS[new Date().getDate()%SUBS.length];
