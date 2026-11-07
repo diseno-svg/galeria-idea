@@ -1188,6 +1188,15 @@
       try{ localStorage.setItem(DATOS_CACHE,JSON.stringify(data)); }catch(e){}
       if(cb)cb(null);
     }).catch(function(e){
+      // Plan B: el script de Diseño entrega el mismo catálogo (accion=datos) sin pasar por la descarga pública de Drive.
+      if(intento===0){
+        fetch(SYNC_URL.split('?')[0]+'?accion=datos',{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(data){
+          if(!data||!data.contenido)throw 0;
+          usarDatos(data); try{ localStorage.setItem(DATOS_CACHE,JSON.stringify(data)); }catch(x){}
+          if(cb)cb(null);
+        }).catch(function(){ setTimeout(function(){cargarDatos(cb,1);},1500); });
+        return;
+      }
       if(intento<3){ setTimeout(function(){cargarDatos(cb,intento+1);},[1500,4000,9000][intento]); return; }
       var guardado=null; try{ guardado=JSON.parse(localStorage.getItem(DATOS_CACHE)||'null'); }catch(x){}
       if(guardado&&guardado.contenido){
