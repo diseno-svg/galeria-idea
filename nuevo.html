@@ -667,6 +667,24 @@
     #qf-all .ic{display:none}
   }
   .hero h1,.hero p{text-shadow:0 2px 18px rgba(1,23,55,.6)}
+  /* ── v4: la portada llena la primera pantalla; Sede y Curso se esconden mientras se ve la portada ── */
+  .hero{min-height:max(400px,calc(100svh - 190px))}
+  @media(min-width:721px){ .hero{min-height:max(480px,calc(100svh - 160px))} }
+  .nav2{max-height:220px;overflow:hidden;transition:max-height .55s var(--ease),opacity .4s ease,margin-top .55s var(--ease)}
+  .hdr.intro .nav2{max-height:0;opacity:0;margin-top:0;pointer-events:none}
+  /* Frases que cambian */
+  .quote{position:relative;min-height:3.2em;max-width:620px;margin:22px auto 0;display:grid;place-items:center}
+  .quote span{grid-area:1/1;font-size:17px;line-height:1.45;font-weight:500;color:#fff;letter-spacing:-.005em;text-shadow:0 2px 18px rgba(1,23,55,.7);
+    opacity:0;transform:translateY(12px);filter:blur(4px);transition:opacity .8s var(--ease),transform .8s var(--ease),filter .8s var(--ease)}
+  .quote span.on{opacity:1;transform:none;filter:none}
+  .quote span::before{content:"“";color:var(--gold);font-weight:700;margin-right:2px}
+  .quote span::after{content:"”";color:var(--gold);font-weight:700;margin-left:2px}
+  .qdots{display:flex;gap:6px;justify-content:center;margin-top:10px}
+  .qdots i{width:6px;height:6px;border-radius:999px;background:rgba(255,255,255,.3);transition:width .4s var(--ease),background .4s}
+  .qdots i.on{width:20px;background:var(--gold)}
+  @media(min-width:721px){ .quote span{font-size:20px} }
+  @media(max-width:720px){ .quote{min-height:4.4em} }
+  .hero p{display:none}
 </style>
 </head>
 <body>
@@ -1783,9 +1801,32 @@
     function thumb(id,w){return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w'+w;}
     function vsrc(id){return 'https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;}
     function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+    // Carpeta de Drive con los videos y fotos de la portada (compartida como «cualquiera con el enlace»).
+    // Si está vacía o no carga, la portada usa videos de la galería.
+    var PORTADA_FOLDER='';
     function buildReels(){
       if(built||!box||!ALL.length)return; built=true;
+      if(PORTADA_FOLDER){
+        var u='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("'"+PORTADA_FOLDER+"' in parents and trashed=false")+
+          '&fields=files(id,name,mimeType)&pageSize=100&key='+DRIVE_API_KEY;
+        fetch(u).then(function(r){return r.json();}).then(function(d){
+          var fs=(d.files||[]).filter(function(f){return /^(video\/mp4|image\/(jpeg|png|webp))$/.test(f.mimeType);});
+          if(fs.length<3)throw 0;
+          var rows=shuffle(fs.map(function(f){return {driveId:f.id,nombre:f.name,tipo:/^video/.test(f.mimeType)?'Video':'Foto',mp4:/^video/.test(f.mimeType)};}));
+          fillReels(rows);
+        }).catch(function(){fillReels(null);});
+        return;
+      }
+      fillReels(null);
+    }
+    function fillReels(propios){
       var ok=function(r){return r.driveId&&r.driveId.indexOf('gphotos:')!==0;};
+      if(propios){
+        var n0=phone?5:9, pick0=propios.slice(0,n0);
+        while(pick0.length<n0)pick0=pick0.concat(propios.slice(0,n0-pick0.length));
+        paint(pick0); if(!lite)startVideos(propios.slice(n0).filter(function(r){return r.tipo==='Video';}).concat(propios.filter(function(r){return r.tipo==='Video';})));
+        return;
+      }
       var mp4=ALL.filter(function(r){return ok(r)&&r.tipo==='Video'&&/\.mp4$/i.test(r.nombre);});
       var listos=mp4.filter(function(r){return r.estado==='Listo';});
       var pool=shuffle((listos.length>=8?listos:mp4).slice(0,60));
@@ -1794,12 +1835,15 @@
         var fotos=shuffle(ALL.filter(function(r){return ok(r)&&r.tipo!=='Video';}).slice(0,80));
         pick=pick.concat(fotos.slice(0,n-pick.length));
       }
-      box.innerHTML=pick.map(function(r){
-        var v=(r.tipo==='Video'&&/\.mp4$/i.test(r.nombre));
-        return '<div class="reel"'+(v?' data-v="'+esc(r.driveId)+'"':'')+'><img alt="" src="'+thumb(r.driveId,400)+'" onload="this.classList.add(\'in\')"></div>';
-      }).join('');
+      paint(pick);
       if(lite)return;
       startVideos(pool.slice(n));
+    }
+    function paint(pick){
+      box.innerHTML=pick.map(function(r){
+        var v=(r.tipo==='Video'&&(/\.mp4$/i.test(r.nombre)||r.mp4));
+        return '<div class="reel"'+(v?' data-v="'+esc(r.driveId)+'"':'')+'><img alt="" src="'+thumb(r.driveId,400)+'" onload="this.classList.add(\'in\')"></div>';
+      }).join('');
     }
     var MAXV=phone?1:3, playing=[], spare=[], heroVisible=true, swaps=0;
     function tilesInView(){
@@ -1819,7 +1863,7 @@
       if(playing.indexOf(tile)<0)playing.push(tile);
     }
     function startVideos(rest){
-      spare=rest.filter(function(r){return /\.mp4$/i.test(r.nombre);}).map(function(r){return r.driveId;});
+      spare=rest.filter(function(r){return r.tipo==='Video';}).map(function(r){return r.driveId;});
       var tiles=tilesInView();
       // Las del centro primero: son las que más se ven.
       var mid=tiles.length/2; tiles.sort(function(a,b){return Math.abs(tiles.indexOf(a)-mid)-Math.abs(tiles.indexOf(b)-mid);});
@@ -1841,6 +1885,44 @@
     }
     var _updateHero2=updateHero;
     window.updateHero=function(){ _updateHero2(); buildReels(); };
+  })();
+  // ── v4: filtros escondidos en la portada, frases que cambian y carpeta propia para la portada ──
+  (function(){
+    var hdr=$('hdr'), hero=$('hero');
+    function sync(){
+      var activos=$('f-sede').value||$('f-servicio').value;
+      var enPortada=hero&&!hero.classList.contains('off')&&window.scrollY<Math.max(120,hero.offsetHeight*.45);
+      hdr.classList.toggle('intro',!!enPortada&&!activos);
+      if(window.syncQF)setTimeout(function(){try{window.syncQF();}catch(e){}},0);
+    }
+    window.addEventListener('scroll',function(){ if(!sync.t)sync.t=requestAnimationFrame(function(){sync.t=0;sync();}); },{passive:true});
+    var _apply=apply; window.apply=function(){ _apply.apply(this,arguments); sync(); };
+    sync();
+
+    // Frases para los publicistas (originales de IDEA, sin atribuir a nadie).
+    var FRASES=[
+      'Cada foto es una historia esperando su caption.',
+      'Lo que no se graba, no despega.',
+      'Aquí vive la materia prima de la próxima gran idea.',
+      'La creatividad también suma horas de vuelo.',
+      'Graba hoy lo que mañana inspira a un futuro piloto.',
+      'El mejor contenido nace en el hangar, no en el escritorio.',
+      'Una buena toma vale más que mil filtros.',
+      'Busca, elige, cuenta. Lo demás es despegue.',
+      'Detrás de cada post hay alguien que no dejó de buscar el ángulo.',
+      'Las ideas que vuelan alto empiezan con un buen archivo.'
+    ];
+    var p=hero&&hero.querySelector('p');
+    if(p){
+      var q=document.createElement('div'); q.className='quote';
+      q.innerHTML=FRASES.map(function(f){return '<span>'+esc(f)+'</span>';}).join('');
+      var dots=document.createElement('div'); dots.className='qdots';
+      dots.innerHTML=FRASES.map(function(){return '<i></i>';}).join('');
+      p.insertAdjacentElement('afterend',q); q.insertAdjacentElement('afterend',dots);
+      var spans=q.children, ds=dots.children, k=Math.floor(Math.random()*FRASES.length);
+      function show(){ for(var i=0;i<spans.length;i++){spans[i].classList.toggle('on',i===k);ds[i].classList.toggle('on',i===k);} }
+      show(); setInterval(function(){ if(document.hidden)return; k=(k+1)%FRASES.length; show(); },5200);
+    }
   })();
 </script>
 
