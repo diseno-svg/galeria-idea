@@ -1029,6 +1029,18 @@
   /* ── v12: franja en lienzo (un solo video) ── */
   .reels .franja-cv{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1.4s ease .2s}
   .hero.go .reels .franja-cv{opacity:1}
+  /* ── v13: acciones del álbum (copiar enlace para alumnos y agregar material) ── */
+  .gacts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
+  .gact{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.38);
+    background:rgba(255,255,255,.12);color:#fff;font:600 13px var(--font);cursor:pointer;transition:background .2s,color .2s,transform .2s}
+  .gact:hover{background:#fff;color:#01275C;transform:translateY(-1px)}
+  .gact.gold{background:var(--gold);border-color:var(--gold);color:#000}
+  .gact.gold:hover{background:#ffd06a;color:#000}
+  .gact .ic{width:15px;height:15px}
+  .gact.ok{background:#22c55e;border-color:#22c55e;color:#fff}
+  .gact[disabled]{opacity:.6;pointer-events:none}
+  .albbar .gact{height:36px}
+  body.kiosco .gacts{display:none!important}
 </style>
 </head>
 <body>
@@ -1057,6 +1069,8 @@
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m20.5 16-4.8-4.8L6.5 19.5"/></symbol>
@@ -1498,7 +1512,7 @@
         var head=(g==='__gp__')
           ? '<div class="gt">Álbumes en Google Fotos</div><div class="gm"><span class="gpb">'+ic('photos')+'Todavía no pasados a Drive</span></div>'
           : '<div class="gt">'+esc(inf.title)+'</div>'+metaHtml(inf);
-        var sec=document.createElement('section');sec.className='grp';
+        var sec=document.createElement('section');sec.className='grp';sec.setAttribute('data-alb',g);
         sec.innerHTML='<div class="ghead"><div class="ghead-t">'+head+'</div><div class="gn">'+fmtN(list.length)+'</div></div><div class="grid"></div>';
         main.appendChild(sec); s.grid=sec.querySelector('.grid');
       }
@@ -2110,7 +2124,7 @@
           var head=(g==='__gp__')
             ? '<div class="gt">Álbumes en Google Fotos</div><div class="gm"><span class="gpb">'+ic('photos')+'Todavía no pasados a Drive</span></div>'
             : '<div class="gt">'+esc(inf.title)+'</div>'+metaHtml(inf);
-          var sec=document.createElement('section');sec.className='grp';
+          var sec=document.createElement('section');sec.className='grp';sec.setAttribute('data-alb',g);
           sec.innerHTML='<div class="ghead"><div class="ghead-t">'+head+'</div><div class="gn">'+fmtN(list.length)+'</div></div><div class="grid"></div>';
           main.appendChild(sec); s.grid=sec.querySelector('.grid');
           s.lim=limitFor(s.grid);
@@ -2372,6 +2386,12 @@
       ['TDC',['Inglés avanzado TDC','Boeing 737 (TDC)','Embraer 190 (TDC)','MD-80','Pasaporte al Golfo · Emirates','Etihad','Qatar','Estética y maquillaje']],
       ['Drones, crecimiento profesional y programas',['Drones agrícolas','Primeros auxilios','SMS','Mercancías peligrosas','Inducción docente','El arte de cerrar ventas','Experiencia de cliente 5 estrellas','Psicología de la influencia','El arte de convencer','PIC','IDEA Plus']]
     ];
+    // Catálogo de cursos para nombrar los álbumes (código de carpeta → nombre completo).
+    window.__CURSOS={};
+    REG.forEach(function(r){window.__CURSOS[r[0]]={label:r[1],sigla:r[2]||r[0],esp:false};});
+    ESP.forEach(function(g){var padre=/^(TMA|TDC)$/.test(g[0])?g[0]:(g[0]==='Pilotos'?'PILOTO':'');g[1].forEach(function(n){
+      var c=n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+      if(!window.__CURSOS[c])window.__CURSOS[c]={label:n,sigla:padre==='PILOTO'?'PILOTO':padre,padre:padre,esp:true};});});
     function codigo(n){return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();}
     var SEDES=[['BRM','Barquisimeto'],['CCS','Caracas'],['CHA','Charallave'],['MAR','Maracaibo'],['PMV','Margarita'],['SCI','San Cristóbal'],['VLN','Valencia'],['','Sin sede']];
     var PH=['grupo','fecha','evento','sede','servicio','ano','anio','tipo_de_evento'];
@@ -2766,6 +2786,117 @@
       piezas.forEach(function(p){p.img.onload=function(){if(!activo){medir();pinta(performance.now());}};});
       medir(); estado();
       return true;
+    };
+  })();
+
+  // ── v13: en cada álbum, «Copiar enlace» para los alumnos y «Agregar» material a la misma carpeta ──
+  (function(){
+    var FORMATO=/^[A-Z0-9 ]{2,60}( - [A-Z]{3})? - \d{4}-\d{2}-\d{2} - [a-z0-9_áéíóúüñ]{1,60} - [a-z0-9_áéíóúüñ]{1,80}$/;
+    var ABRIR=SYNC_URL.split('?')[0]+'?accion=crearCarpeta&clave=idea-galeria-subir-2026&nombre=';
+    var cache={};
+    function sePuedeAgregar(a){
+      if(cache[a]!==undefined)return cache[a];
+      // Solo álbumes hechos con el Nombrador que están en «Sin Editar» (ahí el script encuentra la carpeta por su nombre).
+      var ok=FORMATO.test(a)&&!ALL.some(function(r){return r.album===a&&/editad/i.test(r.estado||'');});
+      return (cache[a]=ok);
+    }
+    function enlace(a){return 'https://diseno-svg.github.io/galeria-idea/alumnos.html?a='+codigoAlumnos(a);}
+    function marcar(b){
+      if(!b)return; var html=b.innerHTML; b.classList.add('ok'); b.innerHTML=ic('link')+'¡Copiado!';
+      setTimeout(function(){b.classList.remove('ok');b.innerHTML=html;},2200);
+    }
+    function aMano(url){
+      var ta=document.createElement('textarea');ta.value=url;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();var h=false;try{h=document.execCommand('copy');}catch(e){}ta.remove();return h;
+    }
+    function copiar(a,b){
+      var url=enlace(a);
+      function ok(){ marcar(b); if(window.toast)toast('Enlace para alumnos copiado · pégalo en el grupo'); }
+      function plan(){
+        if(navigator.share){navigator.share({title:'Fotos y videos · IDEA',url:url}).catch(function(){});return;}
+        window.prompt('Copia este enlace:',url);
+      }
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(ok,function(){ aMano(url)?ok():plan(); });
+      } else { aMano(url)?ok():plan(); }
+    }
+    function agregar(a,b){
+      // La ventana se abre en el mismo toque (si no, el teléfono la bloquea) y luego va a la carpeta.
+      var w=window.open('about:blank','_blank');
+      var html=b?b.innerHTML:'';
+      if(b){b.disabled=true;b.innerHTML=ic('loader')+'Abriendo…';}
+      fetch(ABRIR+encodeURIComponent(a),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+        if(!d||!d.ok||!d.url)throw 0;
+        if(w)w.location.href=d.url; else location.href=d.url;
+        if(window.toast)toast('Sube ahí lo que faltó · aparece en la galería con la próxima sincronización');
+      }).catch(function(){
+        if(w)w.close();
+        if(window.toast)toast('No se pudo abrir la carpeta. Búscala en Drive › Sin Editar');
+      }).then(function(){ if(b){b.disabled=false;b.innerHTML=html;} });
+    }
+    function botones(a){
+      return '<button class="gact" data-share="'+esc(a)+'" type="button">'+ic('link')+'Copiar enlace</button>'+
+        (sePuedeAgregar(a)?'<button class="gact gold" data-add="'+esc(a)+'" type="button">'+ic('plus')+'Agregar</button>':'');
+    }
+    function decorar(){
+      [].forEach.call(document.querySelectorAll('#main .grp[data-alb]:not(.deco)'),function(sec){
+        sec.classList.add('deco'); var a=sec.getAttribute('data-alb'); if(!a||a==='__gp__')return;
+        var t=sec.querySelector('.ghead-t'); if(!t)return;
+        var d=document.createElement('div'); d.className='gacts'; d.innerHTML=botones(a); t.appendChild(d);
+      });
+      // Dentro del álbum: el botón de compartir copia directo y se suma «Agregar fotos».
+      var bar=document.querySelector('.albbar'), sh=$('albshare');
+      if(bar&&sh&&!sh.hasAttribute('data-share')){
+        var g=document.querySelector('#main .grp[data-alb]'), a=g&&g.getAttribute('data-alb');
+        if(a){
+          sh.setAttribute('data-share',a); sh.className='gact'; sh.innerHTML=ic('link')+'Copiar enlace para alumnos'; sh.onclick=null;
+          if(sePuedeAgregar(a))sh.insertAdjacentHTML('afterend','<button class="gact gold" data-add="'+esc(a)+'" type="button">'+ic('plus')+'Agregar fotos</button>');
+        }
+      }
+    }
+    // Se atiende antes que el clic del encabezado (que abre el álbum).
+    document.addEventListener('click',function(e){
+      var b=e.target.closest('[data-share],[data-add]'); if(!b)return;
+      e.preventDefault(); e.stopPropagation();
+      if(b.hasAttribute('data-share'))copiar(b.getAttribute('data-share'),b); else agregar(b.getAttribute('data-add'),b);
+    },true);
+    var _rm=window.renderMore; window.renderMore=function(){ _rm.apply(this,arguments); decorar(); };
+    var _r=window.render; window.render=function(){ _r.apply(this,arguments); decorar(); };
+  })();
+
+  // ── v14: títulos de álbum con el nombre del curso (también especiales) cuando el evento es genérico ──
+  (function(){
+    var GEN=/^(general|material(_|\s)?org[aá]nico|org[aá]nico|material|contenido|varios|sin_evento|sin evento)?$/i;
+    function curso(a){var c=String(a||'').split(/\s+-\s+/)[0].trim().toUpperCase();return window.__CURSOS&&window.__CURSOS[c]?{c:c,i:window.__CURSOS[c]}:null;}
+    // Si Airtable no reconoció el curso, se toma del nombre de la carpeta (así sale también en el filtro «Curso»).
+    var _onData=onData;
+    window.onData=function(rows){
+      var raw={}; (rows||[]).forEach(function(r){if(r.servicio)raw[svcLabel(r.servicio).toUpperCase()]=r.servicio;});
+      (rows||[]).forEach(function(r){
+        if(r.servicio&&!/revisar/i.test(r.servicio))return;
+        var k=curso(r.album); if(!k)return;
+        var base=k.i.esp?(k.i.padre||k.c):k.c;
+        r.servicio=raw[base.toUpperCase()]||base;
+      });
+      return _onData.apply(this,arguments);
+    };
+    var _info=albumInfo;
+    window.albumInfo=function(r){
+      var a=r.album||''; if(INFO[a])return INFO[a];
+      var inf=_info(r), k=curso(a);
+      // Archivos sueltos en Editado/SEDE: el álbum se llama como la sede.
+      if(!k&&!inf.gp&&a.indexOf(' - ')<0&&/^[A-ZÁÉÍÓÚÑ ]+$/.test(a)&&inf.title==='Contenido general'){inf.title='Material editado';return (INFO[a]=inf);}
+      if(!k||inf.gp)return inf;
+      var ev=String(r.evento||'').split(' / ')[0].trim();
+      if(!ev){var p=a.split(/\s+-\s+/);if(p.length>=5)ev=p[p.length-1];}
+      var generico=GEN.test(ev.replace(/\s+/g,'_'));
+      if(k.i.esp){
+        inf.title=k.i.label+(generico?'':' · '+human(ev));
+        inf.svc=k.i.sigla||'';
+      } else if(generico){
+        inf.title=k.i.label; inf.svc=k.i.sigla||'';
+      } else if(!inf.svc){ inf.svc=k.i.sigla||''; }
+      return (INFO[a]=inf);
     };
   })();
 </script>
