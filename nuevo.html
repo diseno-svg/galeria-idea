@@ -2473,6 +2473,17 @@
     // Video editado con carpeta propia dentro de «Editado» (curso, sede, fecha y título quedan en el nombre).
     // Se enciende cuando el script esté publicado con destino=editado; mientras, abre la carpeta de la sede.
     var EDITADO_CREAR=false;
+    // Se enciende solo si el script publicado ya es la versión nueva (la que también responde accion=datos,
+    // publicada después del cambio destino=editado). Se comprueba una vez por equipo.
+    try{ if(localStorage.getItem('idea.edOK')==='1')EDITADO_CREAR=true; }catch(e){}
+    var probando=false;
+    function probarEditado(listo){
+      if(EDITADO_CREAR||probando)return; probando=true;
+      var ctl=window.AbortController?new AbortController():null, to=setTimeout(function(){if(ctl)ctl.abort();},12000);
+      fetch(SYNC_URL.split('?')[0]+'?accion=datos',{cache:'no-store',signal:ctl&&ctl.signal}).then(function(r){return r.json();}).then(function(d){
+        if(d&&d.contenido){EDITADO_CREAR=true;try{localStorage.setItem('idea.edOK','1');}catch(e){} if(listo)listo();}
+      }).catch(function(){}).then(function(){clearTimeout(to);probando=false;});
+    }
     // La pregunta «¿Qué vas a subir?» va de primera; con «Video editado» solo hace falta la sede.
     (function(){
       var body=document.querySelector('#upsheet .sheet-body'), steps=body.querySelector('.up-steps');
@@ -2487,11 +2498,14 @@
     $('uptipo').onclick=function(e){
       var b=e.target.closest('.up-chip'); if(!b)return;
       MODO=b.getAttribute('data-v');
+      if(MODO==='editado'&&!EDITADO_CREAR){var tb=this,bb=b;probarEditado(function(){if(MODO==='editado')tb.onclick({target:bb});});}
       [].forEach.call(this.children,function(c){c.classList.toggle('on',c===b);});
       var conCampos=MODO==='evento'||(MODO==='editado'&&EDITADO_CREAR);
       $('uprow').style.display=conCampos?'':'none';
-      $('uphint').textContent=(MODO==='editado'&&EDITADO_CREAR)?'Para videos ya terminados. Elige curso y sede, y escribe en «Evento» el título de la pieza (por ejemplo «reel práctica de motores»). La carpeta se crea dentro de «Editado».':HINT[MODO];
+      $('uphint').textContent=(MODO==='editado'&&EDITADO_CREAR)?'Para videos ya terminados. Elige curso y sede, y escribe en «Evento» el título de la pieza (por ejemplo «reel práctica de motores»). La carpeta se crea dentro de «Editado» con el curso, la sede y la fecha, para que la pieza quede identificada.':HINT[MODO];
       $('upsheet').classList.toggle('modo-ed',MODO==='editado'&&!EDITADO_CREAR);
+      var lev=$('upevento').previousElementSibling; if(lev)lev.innerHTML=(MODO==='editado'?'Título de la pieza':'Evento')+' <small>opcional</small>';
+      $('upevento').placeholder=MODO==='editado'?'reel primer vuelo':'práctica de incendios';
       if(!conCampos){$('upgrupo').value='';$('upevento').value='';}
       else setTimeout(function(){$('upevento').focus();},50);
       pintar();
