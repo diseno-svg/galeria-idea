@@ -2553,7 +2553,7 @@
         var hero=$('hero');
         var activo=heroOn&&!document.hidden&&!document.body.classList.contains('noscroll')&&!hero.classList.contains('off');
         var hb=hero.getBoundingClientRect(), c=(hb.left+hb.right)/2;
-        var lista=!activo?[]:[].slice.call(vis).sort(function(a,b){
+        var lista=!activo?[]:Array.from(vis).sort(function(a,b){
           var A=a.getBoundingClientRect(),B=b.getBoundingClientRect();
           return Math.abs((A.left+A.right)/2-c)-Math.abs((B.left+B.right)/2-c);
         }).slice(0,MAXP);
