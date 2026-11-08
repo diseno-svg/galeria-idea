@@ -995,6 +995,37 @@
   @media(min-width:1600px){
     .grid,.skel{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
   }
+  /* ── v11: rendimiento — menos desenfoques y efectos pesados (evita pantallas negras y videos pegados) ── */
+  .blob{filter:none!important;opacity:.9}
+  .blob.b4{display:none}
+  .stats,.gopen,.mtile,.albbar,.totop,.ibtn,.fbtn,.search input,.seg,.hello .ask,.hero-kicker{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .stats{background:rgba(4,26,64,.62)}
+  .gopen{background:rgba(255,255,255,.16)}
+  .mtile{background:rgba(1,39,92,.78)}
+  .albbar{background:rgba(255,255,255,.16)}
+  .totop{background:rgba(1,39,92,.85)}
+  .ibtn,.fbtn,.search input,.seg{background:rgba(255,255,255,.16)}
+  .hdr{-webkit-backdrop-filter:blur(8px)!important;backdrop-filter:blur(8px)!important;background:rgba(14,56,118,.72)!important}
+  .sheet{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(22,66,124,.97)!important}
+  .scrim{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .hero.go h1 span.gold .ch{animation:chIn .9s var(--ease) forwards,ola 7s ease-in-out infinite;animation-delay:calc(.75s + var(--i) * 40ms),calc(3s + var(--i) * 70ms)}
+  .hero h1 span.gold .ch{text-shadow:0 0 18px rgba(252,183,45,.35),0 2px 18px rgba(1,23,55,.6)}
+  .hero h1 .ch{will-change:auto}
+  .card{will-change:auto}
+  body.noscroll .blob,body.noscroll .reels-row,body.noscroll .hero h1 .ch,body.noscroll .tline .pl{animation-play-state:paused!important}
+  /* ── Compartir un álbum con los alumnos: vista cerrada (solo ese álbum, sin menús ni enlaces a Drive) ── */
+  .albbar .share{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.4);
+    background:rgba(255,255,255,.14);color:#fff;font:600 13px var(--font);cursor:pointer;margin-left:auto}
+  .albbar .share:hover{background:#fff;color:#01275C}
+  .albbar .share .ic{width:15px;height:15px}
+  @media(max-width:720px){ .albbar{flex-wrap:wrap;border-radius:18px} .albbar .share{margin-left:0} }
+  body.kiosco .searchrow,body.kiosco .seg,body.kiosco .nav2,body.kiosco .chips,body.kiosco .bar-r,body.kiosco #hero,body.kiosco .fab,
+  body.kiosco .albbar .back,body.kiosco .albbar .share,body.kiosco .gopen,body.kiosco .totop,body.kiosco .lb-actions a.act:not(.gold){display:none!important}
+  body.kiosco .brand{pointer-events:none}
+  body.kiosco .hdr{padding-bottom:10px}
+  body.kiosco .kiosco-msg{display:block}
+  .kiosco-msg{display:none;margin:22px auto 0;max-width:640px;text-align:center;color:#fff;font-size:14.5px;line-height:1.5}
+  .kiosco-msg b{display:block;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -2025,6 +2056,7 @@
     },true);
 
     function openAlbum(g){ ALB_Y=window.scrollY; ALB=g; apply(); window.scrollTo(0,0); }
+    window.__galAlbum={open:openAlbum,actual:function(){return ALB;}};
     function closeAlbum(){
       ALB=''; apply();
       var y=ALB_Y; ALB_Y=0;
@@ -2044,9 +2076,17 @@
       _render();
       if(ALB&&VIEW.length){
         var bar=document.createElement('div'); bar.className='albbar';
-        bar.innerHTML='<button class="back" id="albback">'+ic('chev-l')+'Todos los álbumes</button><span>'+fmtN(VIEW.length)+' archivos en este álbum</span>';
+        bar.innerHTML='<button class="back" id="albback">'+ic('chev-l')+'Todos los álbumes</button><span>'+fmtN(VIEW.length)+' archivos en este álbum</span>'
+          +(ALB!=='__gp__'?'<button class="share" id="albshare">'+ic('external')+'Compartir con alumnos</button>':'');
         $('main').insertBefore(bar,$('main').firstChild);
         $('albback').onclick=closeAlbum;
+        if($('albshare'))$('albshare').onclick=function(){
+          var url='https://diseno-svg.github.io/galeria-idea/nuevo.html?album='+encodeURIComponent(ALB);
+          function ok(){ if(window.toast)toast('Enlace copiado · pásalo a los alumnos'); }
+          if(navigator.share&&window.matchMedia('(max-width:720px)').matches){ navigator.share({title:'Fotos y videos · IDEA',url:url}).catch(function(){}); return; }
+          if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(ok,function(){window.prompt('Copia este enlace:',url);});
+          else window.prompt('Copia este enlace:',url);
+        };
       }
     };
 
@@ -2498,21 +2538,42 @@
       box.querySelectorAll('video').forEach(function(v){v.pause();v.remove();});
       box.querySelectorAll('img').forEach(function(i){i.classList.add('in');});
       if(!('IntersectionObserver' in window))return;
+      // Máximo 3 videos a la vez (2 en teléfono): los más centrados. Los demás se pausan y se descargan de memoria.
+      // Todo se detiene si la portada no se ve, si está abierto el visor o si la pestaña está en segundo plano.
+      var MAXP=window.matchMedia('(max-width:720px)').matches?2:3, vis=new Set(), heroOn=true;
       var io=new IntersectionObserver(function(en){
-        en.forEach(function(x){
-          var t=x.target, id=t.getAttribute('data-v'), v=t.querySelector('video');
-          if(x.isIntersecting){
+        en.forEach(function(x){ if(x.isIntersecting&&x.intersectionRatio>=.5)vis.add(x.target); else vis.delete(x.target); });
+        tick();
+      },{root:$('hero'),threshold:[0,.5,1]});
+      box.querySelectorAll('.reel[data-v]').forEach(function(t){io.observe(t);});
+      new IntersectionObserver(function(en){heroOn=en[0].isIntersecting;tick();},{threshold:.15}).observe($('hero'));
+      document.addEventListener('visibilitychange',tick);
+      function quitar(v){ try{v.pause();v.removeAttribute('src');v.load();}catch(e){} v.remove(); }
+      function tick(){
+        var hero=$('hero');
+        var activo=heroOn&&!document.hidden&&!document.body.classList.contains('noscroll')&&!hero.classList.contains('off');
+        var hb=hero.getBoundingClientRect(), c=(hb.left+hb.right)/2;
+        var lista=!activo?[]:[].slice.call(vis).sort(function(a,b){
+          var A=a.getBoundingClientRect(),B=b.getBoundingClientRect();
+          return Math.abs((A.left+A.right)/2-c)-Math.abs((B.left+B.right)/2-c);
+        }).slice(0,MAXP);
+        box.querySelectorAll('.reel[data-v]').forEach(function(t){
+          var v=t.querySelector('video'), on=lista.indexOf(t)>=0;
+          if(on){
             if(!v){
+              var id=t.getAttribute('data-v');
               v=document.createElement('video'); v.muted=true; v.loop=true; v.playsInline=true; v.setAttribute('playsinline',''); v.preload='auto';
               v.addEventListener('playing',function(){v.classList.add('in');},{once:true});
               v.src=id.indexOf('/')>=0?id:('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY);
               t.appendChild(v);
             }
-            var p=v.play(); if(p&&p.catch)p.catch(function(){});
-          } else if(v){ v.pause(); }
+            if(v.paused){var p=v.play(); if(p&&p.catch)p.catch(function(){});}
+          } else if(v){ quitar(v); }
         });
-      },{root:$('hero'),threshold:.35});
-      box.querySelectorAll('.reel[data-v]').forEach(function(t){io.observe(t);});
+        // Sin animación de la franja cuando no se ve (ahorra batería y gráficos).
+        var row=box.querySelector('.reels-row'); if(row)row.style.animationPlayState=activo?'running':'paused';
+      }
+      setInterval(tick,1500);
     }
     new MutationObserver(function(){wrap();}).observe(box,{childList:true});
     wrap();
@@ -2610,6 +2671,27 @@
       if(document.body.classList.contains('noscroll'))return;
       e.preventDefault(); q.focus(); q.select();
     });
+  })();
+  // ── v11: pausar el fondo animado cuando la pestaña no se ve ──
+  document.addEventListener('visibilitychange',function(){
+    document.querySelectorAll('.blob').forEach(function(b){b.style.animationPlayState=document.hidden?'paused':'running';});
+  });
+  // ── Vista para alumnos: …/nuevo.html?album=NOMBRE muestra solo ese álbum (para ver y descargar) ──
+  (function(){
+    var m=location.search.match(/[?&]album=([^&]+)/); if(!m)return;
+    var clave; try{clave=decodeURIComponent(m[1].replace(/\+/g,' '));}catch(e){return;}
+    document.body.classList.add('kiosco');
+    var msg=document.createElement('div'); msg.className='kiosco-msg';
+    msg.innerHTML='<b>Material compartido por IDEA</b>Toca cualquier foto o video para verlo en grande y descargarlo.';
+    var main=$('main'); main.parentNode.insertBefore(msg,main);
+    var t0=Date.now();
+    (function abrir(){
+      if(typeof ALL!=='undefined'&&ALL.length&&window.__galAlbum){
+        try{ if(window.clearAll)clearAll(); else { ['f-servicio','f-sede','f-anio','f-estado','f-tipo','f-tipoevento'].forEach(function(i){if($(i))$(i).value='';}); $('q').value=''; } }catch(e){}
+        window.__galAlbum.open(clave); return;
+      }
+      if(Date.now()-t0<30000)setTimeout(abrir,300);
+    })();
   })();
 </script>
 
