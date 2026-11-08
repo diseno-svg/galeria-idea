@@ -2904,7 +2904,7 @@
   // Toma fotos recientes del catálogo (miniaturas de Drive), las mezcla y las pasa sin parar en un lienzo.
   // Mientras cargan, usa las fotos fijas de la portada para que nunca quede un hueco.
   (function(){
-    var N=28, LOCAL=['f01','f02','f03','f04','f05','v01','v03','v05','v07','v09','v11'];
+    var N=40, LOCAL=['f01','f02','f03','f04','f05','v01','v03','v05','v07','v09','v11'];
     function mezcla(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
     function cargar(src){var im=new Image();im.decoding='async';im.src=src;return im;}
     window.__franjaLienzo=function(box){
@@ -2913,13 +2913,16 @@
       // Respaldo local (ya viene con la página)
       var lista=LOCAL.map(function(n){return cargar('portada/'+n+'.jpg');});
       // Fotos reales de la galería: de los álbumes más recientes, sin HEIC (salen acostadas) ni Google Fotos.
+      // Solo fotos escogidas a mano: las que estén en la carpeta «PORTADA» de Drive (Sin Editar › PORTADA).
+      // Si todavía no hay al menos 6, se usan las fotos fijas de la portada (también escogidas).
       var fotos=(window.ALL||[]).filter(function(r){
-        return r.tipo==='Foto'&&r.driveId&&String(r.driveId).indexOf('gphotos:')<0&&!/\.(heic|heif)$/i.test(r.nombre||'');
+        return r.tipo==='Foto'&&r.driveId&&/^portada\b/i.test(String(r.album||'').trim())&&!/\.(heic|heif)$/i.test(r.nombre||'');
       });
+      if(fotos.length<6)fotos=[];
       fotos.sort(function(a,b){return String(b.album||'').localeCompare(String(a.album||''));});
       var porAlbum={}, elegidas=[];
       // Máximo 3 por álbum para que haya variedad de sedes y cursos.
-      mezcla(fotos.slice(0,600)).forEach(function(r){var k=r.album||'';porAlbum[k]=(porAlbum[k]||0)+1;if(porAlbum[k]<=3&&elegidas.length<N)elegidas.push(r);});
+      mezcla(fotos.slice(0,600)).forEach(function(r){var k=r.album||'';porAlbum[k]=(porAlbum[k]||0)+1;if(elegidas.length<N)elegidas.push(r);});
       var nuevas=elegidas.map(function(r){var im=cargar('https://drive.google.com/thumbnail?id='+encodeURIComponent(r.driveId)+'&sz=w500');im.onerror=function(){im.malo=true;};return im;});
       var cambiado=false;
       function revisar(){
