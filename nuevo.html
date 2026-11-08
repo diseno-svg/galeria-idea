@@ -1026,6 +1026,9 @@
   body.kiosco .kiosco-msg{display:block}
   .kiosco-msg{display:none;margin:22px auto 0;max-width:640px;text-align:center;color:#fff;font-size:14.5px;line-height:1.5}
   .kiosco-msg b{display:block;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+  /* ── v12: franja en lienzo (un solo video) ── */
+  .reels .franja-cv{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity 1.4s ease .2s}
+  .hero.go .reels .franja-cv{opacity:1}
 </style>
 </head>
 <body>
@@ -2207,6 +2210,7 @@
         var vids=shuffle(vs.concat(eds)), pick=[], fi=0;
         // Una sola franja continua: videos, con una foto cada tres.
         vids.forEach(function(v,k){ pick.push(v); if(k%3===2&&fi<fs.length)pick.push(fs[fi++]); });
+        if(window.__franjaLienzo&&window.__franjaLienzo(box,pick))return;
         paint(pick);
         return;
       }
@@ -2537,7 +2541,7 @@
     var box=$('reels'); if(!box)return;
     var done=false;
     function wrap(){
-      if(done||!box.children.length||box.querySelector('.reels-row'))return;
+      if(done||!box.children.length||box.querySelector('.reels-row')||box.querySelector('canvas'))return;
       done=true;
       var html=box.innerHTML;
       box.innerHTML='<div class="reels-row">'+html+html+'</div>';
@@ -2699,6 +2703,70 @@
       }
       if(Date.now()-t0<30000)setTimeout(abrir,300);
     })();
+  })();
+
+  // ── v12: franja de la portada en un solo video ──
+  // Los 11 clips viven en un solo archivo (portada/mosaico.mp4, cuadrícula 4×3 de 240×428).
+  // El navegador decodifica un video y la franja se dibuja en un lienzo que se mueve sin parar.
+  (function(){
+    var COLS=4, CW=240, CH=428;
+    window.__franjaLienzo=function(box,pick){
+      var cv=document.createElement('canvas'); if(!cv.getContext)return false;
+      var cx=cv.getContext('2d'); if(!cx)return false;
+      cv.className='franja-cv'; box.innerHTML=''; box.appendChild(cv);
+      var vid=document.createElement('video');
+      vid.muted=true; vid.loop=true; vid.playsInline=true; vid.setAttribute('playsinline',''); vid.setAttribute('muted','');
+      vid.preload='auto'; vid.src='portada/mosaico.mp4';
+      var listo=false; vid.addEventListener('playing',function(){listo=true;});
+      // Cada pieza: celda del mosaico (videos) o foto; las imágenes sirven de respaldo mientras carga.
+      var piezas=pick.map(function(r){
+        var im=new Image(); im.src=r.poster;
+        var m=/v(\d\d)\.mp4$/.exec(r.src||''), c=m?(+m[1]-1):-1;
+        return {img:im,celda:c};
+      });
+      var dpr=Math.min(window.devicePixelRatio||1,1.5), W=0,H=0, off=0, last=0;
+      var lento=window.matchMedia('(max-width:720px)').matches?70:110;
+      function medir(){
+        var r=box.getBoundingClientRect(); var w=Math.round(r.width*dpr), h=Math.round(r.height*dpr);
+        if(w&&h&&(w!==cv.width||h!==cv.height)){cv.width=w;cv.height=h;}
+        W=cv.width;H=cv.height;
+      }
+      function pinta(t){
+        if(!W||!H)medir(); if(!W||!H)return;
+        var tw=Math.round(H*9/16), total=tw*piezas.length;
+        var dt=last?Math.min(100,t-last):0; last=t;
+        off=(off+dt/1000*(total/lento))%total;
+        var x=-(off%tw), k=Math.floor(off/tw);
+        cx.clearRect(0,0,W,H);
+        while(x<W){
+          var p=piezas[k%piezas.length];
+          if(p.celda>=0&&listo&&vid.readyState>=2){
+            cx.drawImage(vid,(p.celda%COLS)*CW,Math.floor(p.celda/COLS)*CH,CW,CH,x,0,tw,H);
+          } else if(p.img.complete&&p.img.naturalWidth){
+            var iw=p.img.naturalWidth, ih=p.img.naturalHeight, sw=Math.min(iw,ih*9/16), sh=sw*16/9;
+            cx.drawImage(p.img,(iw-sw)/2,(ih-sh)/2,sw,sh,x,0,tw,H);
+          }
+          x+=tw; k++;
+        }
+      }
+      var activo=false, raf=0, heroOn=true, hero=$('hero');
+      function bucle(t){ raf=0; if(!activo)return; pinta(t); raf=requestAnimationFrame(bucle); }
+      function estado(){
+        var a=heroOn&&!document.hidden&&!document.body.classList.contains('noscroll')&&!hero.classList.contains('off');
+        if(a===activo)return; activo=a;
+        if(a){ last=0; var pr=vid.play(); if(pr&&pr.catch)pr.catch(function(){}); if(!raf)raf=requestAnimationFrame(bucle); }
+        else { vid.pause(); if(raf){cancelAnimationFrame(raf);raf=0;} }
+      }
+      if('IntersectionObserver' in window)new IntersectionObserver(function(en){heroOn=en[0].isIntersecting;estado();},{threshold:.1}).observe(hero);
+      document.addEventListener('visibilitychange',estado);
+      new MutationObserver(estado).observe(document.body,{attributes:true,attributeFilter:['class']});
+      new MutationObserver(estado).observe(hero,{attributes:true,attributeFilter:['class']});
+      window.addEventListener('resize',function(){medir(); if(!activo)pinta(performance.now());});
+      // Primer cuadro con las fotos, aunque el video tarde.
+      piezas.forEach(function(p){p.img.onload=function(){if(!activo){medir();pinta(performance.now());}};});
+      medir(); estado();
+      return true;
+    };
   })();
 </script>
 
