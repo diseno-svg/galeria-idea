@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Fotos y videos · IDEA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,6 +79,14 @@
   .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;z-index:30;
     padding:11px 18px;border-radius:999px;background:#fff;color:var(--ink);font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:.35s var(--ease);pointer-events:none}
   .toast.on{opacity:1;transform:translate(-50%,0)}
+  .lsheet{position:fixed;inset:0;z-index:40;background:rgba(1,16,38,.55);display:none;align-items:flex-end;justify-content:center}
+  .lsheet.on{display:flex;animation:fade .2s ease}
+  .lsbox{width:min(100%,420px);margin:0 10px calc(12px + env(safe-area-inset-bottom));padding:20px 18px 14px;border-radius:20px;background:#fff;color:var(--ink);
+    display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;animation:up .35s var(--ease)}
+  .lsbox b{font-size:19px;font-weight:800}
+  .lsbox span{font-size:13px;color:#5A7395;word-break:break-all}
+  .lsbox .btn{width:100%;justify-content:center;height:50px;font-size:16px;margin-top:6px}
+  .lsx{border:0;background:none;color:#5A7395;font:600 14px var(--font);padding:10px;cursor:pointer}
   footer{text-align:center;font-size:12px;color:#BFD6EE;padding:0 16px 28px}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card{opacity:1;transform:none}}
 </style>
@@ -107,6 +115,11 @@
     <button class="btn gold" id="lbdl"><svg class="ic"><use href="#i-dl"/></svg>Descargar</button>
   </div>
   <div class="lb-stage" id="lbs"></div>
+</div>
+<div class="lsheet" id="lsheet" role="dialog" aria-label="Guardar archivo">
+  <div class="lsbox"><b>¡Listo!</b><span id="lsname"></span>
+    <button class="btn gold" id="lsgo"><svg class="ic"><use href="#i-dl"/></svg>Guardar en el teléfono</button>
+    <button class="lsx" id="lsx">Cancelar</button></div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -201,13 +214,50 @@
     });
   }
 
+  // Descarga directa: se baja el archivo aquí mismo (con la dirección de la galería, que es la que Google acepta)
+  // y se entrega como archivo. En el teléfono se abre «Guardar imagen / Guardar video» para que quede en Fotos.
+  var MIME={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',heic:'image/heic',heif:'image/heif',webp:'image/webp',
+    mp4:'video/mp4',mov:'video/quicktime',m4v:'video/mp4'};
+  var MOVIL=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var bajando=false, LISTO=null;
+  function entregar(file){
+    if(MOVIL&&navigator.canShare&&navigator.share){
+      try{ if(navigator.canShare({files:[file]})){
+        return navigator.share({files:[file]}).then(function(){LISTO=null;$('lsheet').classList.remove('on');},function(e){
+          // Si el teléfono pide otro toque (tardó en bajar), se muestra el botón «Guardar».
+          if(e&&e.name==='AbortError'){LISTO=null;$('lsheet').classList.remove('on');return;}
+          LISTO=file; $('lsname').textContent=file.name; $('lsheet').classList.add('on');
+        });
+      } }catch(e){}
+    }
+    var u=URL.createObjectURL(file), a=document.createElement('a');
+    a.href=u; a.download=file.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(u);},60000);
+    LISTO=null; $('lsheet').classList.remove('on'); toast('Listo · revisa tus descargas');
+  }
   function descargar(i){
-    var r=ITEMS[i]; if(!r)return;
-    toast('Descargando…');
-    var a=document.createElement('a');
-    a.href='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.driveId)+'?alt=media&key='+KEY;
-    a.download=r.nombre||''; a.target='_blank'; a.rel='noopener noreferrer';
-    document.body.appendChild(a); a.click(); a.remove();
+    var r=ITEMS[i]; if(!r||bajando)return;
+    bajando=true; toast('Descargando…');
+    var nombre=r.nombre||('IDEA-'+r.driveId), ext=(nombre.split('.').pop()||'').toLowerCase();
+    var url='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.driveId)+'?alt=media&key='+KEY;
+    fetch(url,{referrerPolicy:'strict-origin-when-cross-origin'}).then(function(res){
+      if(!res.ok)throw new Error(res.status);
+      var total=+res.headers.get('content-length')||0;
+      if(!res.body||!res.body.getReader||!total)return res.blob();
+      var rd=res.body.getReader(), partes=[], n=0, ult=0;
+      function leer(){return rd.read().then(function(x){
+        if(x.done)return new Blob(partes);
+        partes.push(x.value); n+=x.value.length;
+        var pc=Math.floor(n*100/total); if(pc-ult>=5){ult=pc;toast('Descargando… '+pc+'%');}
+        return leer();
+      });}
+      return leer();
+    }).then(function(blob){
+      var file=new File([blob],nombre,{type:MIME[ext]||blob.type||'application/octet-stream'});
+      return entregar(file);
+    }).catch(function(){
+      toast('No se pudo descargar. Revisa tu conexión e intenta de nuevo.');
+    }).then(function(){bajando=false;});
   }
 
   function ver(i){
@@ -229,6 +279,8 @@
     var t=e.target.closest('[data-dl]'); if(t){e.stopPropagation();descargar(+t.getAttribute('data-dl'));return;}
     t=e.target.closest('.card'); if(t){abrir(+t.getAttribute('data-i'));}
   });
+  $('lsgo').onclick=function(){if(LISTO)entregar(LISTO);};
+  $('lsx').onclick=function(){LISTO=null;$('lsheet').classList.remove('on');};
   $('lbx').onclick=cerrar; $('lbdl').onclick=function(){descargar(POS);};
   document.addEventListener('keydown',function(e){
     if(!$('lb').classList.contains('on'))return;
