@@ -2899,6 +2899,77 @@
       return (INFO[a]=inf);
     };
   })();
+
+  // ── v15: franja de la portada con FOTOS de la propia galería (sin videos) ──
+  // Toma fotos recientes del catálogo (miniaturas de Drive), las mezcla y las pasa sin parar en un lienzo.
+  // Mientras cargan, usa las fotos fijas de la portada para que nunca quede un hueco.
+  (function(){
+    var N=28, LOCAL=['f01','f02','f03','f04','f05','v01','v03','v05','v07','v09','v11'];
+    function mezcla(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+    function cargar(src){var im=new Image();im.decoding='async';im.src=src;return im;}
+    window.__franjaLienzo=function(box){
+      var cv=document.createElement('canvas'); var cx=cv.getContext&&cv.getContext('2d'); if(!cx)return false;
+      cv.className='franja-cv'; box.innerHTML=''; box.appendChild(cv);
+      // Respaldo local (ya viene con la página)
+      var lista=LOCAL.map(function(n){return cargar('portada/'+n+'.jpg');});
+      // Fotos reales de la galería: de los álbumes más recientes, sin HEIC (salen acostadas) ni Google Fotos.
+      var fotos=(window.ALL||[]).filter(function(r){
+        return r.tipo==='Foto'&&r.driveId&&String(r.driveId).indexOf('gphotos:')<0&&!/\.(heic|heif)$/i.test(r.nombre||'');
+      });
+      fotos.sort(function(a,b){return String(b.album||'').localeCompare(String(a.album||''));});
+      var porAlbum={}, elegidas=[];
+      // Máximo 3 por álbum para que haya variedad de sedes y cursos.
+      mezcla(fotos.slice(0,600)).forEach(function(r){var k=r.album||'';porAlbum[k]=(porAlbum[k]||0)+1;if(porAlbum[k]<=3&&elegidas.length<N)elegidas.push(r);});
+      var nuevas=elegidas.map(function(r){var im=cargar('https://drive.google.com/thumbnail?id='+encodeURIComponent(r.driveId)+'&sz=w500');im.onerror=function(){im.malo=true;};return im;});
+      var cambiado=false;
+      function revisar(){
+        if(cambiado||!nuevas.length)return;
+        var ok=nuevas.filter(function(im){return im.complete&&im.naturalWidth>40&&!im.malo;});
+        var pend=nuevas.filter(function(im){return !im.complete&&!im.malo;}).length;
+        if(ok.length>=Math.min(12,nuevas.length)&&(pend===0||ok.length>=18||Date.now()-t0>6000)){
+          cambiado=true; cv.style.transition='opacity .6s'; cv.style.opacity='0';
+          setTimeout(function(){lista=ok;off=0;cv.style.opacity='';},650);
+        }
+      }
+      var t0=Date.now(), revisor=setInterval(function(){revisar();if(cambiado||Date.now()-t0>20000)clearInterval(revisor);},500);
+
+      var dpr=Math.min(window.devicePixelRatio||1,1.5), W=0,H=0, off=0, last=0;
+      function medir(){
+        var r=box.getBoundingClientRect(), w=Math.round(r.width*dpr), h=Math.round(r.height*dpr);
+        if(w&&h&&(w!==cv.width||h!==cv.height)){cv.width=w;cv.height=h;}
+        W=cv.width;H=cv.height;
+      }
+      function pinta(t){
+        if(!W||!H)medir(); if(!W||!H)return;
+        var vis=lista.filter(function(im){return im.complete&&im.naturalWidth;}); if(!vis.length)return;
+        var tw=Math.round(H*(W<H?0.5:0.62)), total=tw*vis.length;
+        var dt=last?Math.min(100,t-last):0; last=t;
+        off=(off+dt/1000*(tw/4.5))%total;          // una foto cada ~4,5 s
+        var x=-(off%tw), k=Math.floor(off/tw);
+        cx.clearRect(0,0,W,H);
+        while(x<W){
+          var im=vis[k%vis.length], iw=im.naturalWidth, ih=im.naturalHeight, ar=tw/H, sw, sh;
+          if(iw/ih>ar){sh=ih;sw=ih*ar;}else{sw=iw;sh=iw/ar;}
+          cx.drawImage(im,(iw-sw)/2,(ih-sh)/2,sw,sh,Math.round(x),0,tw+1,H);
+          x+=tw; k++;
+        }
+      }
+      var activo=false, raf=0, heroOn=true, hero=$('hero');
+      function bucle(t){raf=0;if(!activo)return;pinta(t);raf=requestAnimationFrame(bucle);}
+      function estado(){
+        var a=heroOn&&!document.hidden&&!document.body.classList.contains('noscroll')&&!hero.classList.contains('off');
+        if(a===activo)return; activo=a;
+        if(a){last=0;if(!raf)raf=requestAnimationFrame(bucle);} else if(raf){cancelAnimationFrame(raf);raf=0;}
+      }
+      if('IntersectionObserver' in window)new IntersectionObserver(function(en){heroOn=en[0].isIntersecting;estado();},{threshold:.1}).observe(hero);
+      document.addEventListener('visibilitychange',estado);
+      new MutationObserver(estado).observe(document.body,{attributes:true,attributeFilter:['class']});
+      new MutationObserver(estado).observe(hero,{attributes:true,attributeFilter:['class']});
+      window.addEventListener('resize',function(){medir();if(!activo)pinta(performance.now());});
+      medir(); estado();
+      return true;
+    };
+  })();
 </script>
 
 <div class="calwrap" id="calwrap"><div class="calbar"><div class="ctit">Calendario</div><div class="calviews"><button id="cal-vmes" class="calviewbtn active">Mes</button><button id="cal-vtab" class="calviewbtn">Tabla</button></div><div class="calctrl" id="calctrl-mes"><button class="calnav" id="cal-prev">‹</button><span class="callabel" id="cal-label"></span><button class="calnav" id="cal-next">›</button></div><select id="calmes" style="display:none"></select><button class="cclose" id="calclose" title="Cerrar">✕</button></div><div class="calbody" id="calbody"></div></div>
