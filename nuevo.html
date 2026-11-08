@@ -1185,6 +1185,13 @@
   // Página estática en GitHub Pages. Los datos llegan de un JSON en Drive que un
   // script de Apps Script regenera cada 15 min; se lee con una API key de Google
   // restringida a Drive API + este dominio.
+  // Código del enlace para alumnos (igual al de alumnos.html).
+  function fnvA(s,h){for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+  function codigoAlumnos(album){var s='idea·alumnos·'+album;return fnvA(s,2166136261).toString(36)+fnvA(s,3735928559).toString(36);}
+  (function(){ // Enlaces viejos (?album=) pasan a la página cerrada de alumnos.
+    var a=new URLSearchParams(location.search).get('album');
+    if(a&&a!=='__gp__')location.replace('alumnos.html?a='+codigoAlumnos(a));
+  })();
   var DRIVE_API_KEY='AIzaSyDG8OEUiJTqQdNck1NJZhOpD36Q1VBaAyQ';
   var DATOS_URL='https://www.googleapis.com/drive/v3/files/1eURdGqo8-mjYhzMJttVHpCFgzEoa-hd1?alt=media&key='+DRIVE_API_KEY;
   // Registro Drive → Airtable a demanda. El JSON se regenera aparte cada 15 min.
@@ -2081,8 +2088,8 @@
         $('main').insertBefore(bar,$('main').firstChild);
         $('albback').onclick=closeAlbum;
         if($('albshare'))$('albshare').onclick=function(){
-          var url='https://diseno-svg.github.io/galeria-idea/nuevo.html?album='+encodeURIComponent(ALB);
-          function ok(){ if(window.toast)toast('Enlace copiado · pásalo a los alumnos'); }
+          var url='https://diseno-svg.github.io/galeria-idea/alumnos.html?a='+codigoAlumnos(ALB);
+          function ok(){ if(window.toast)toast('Enlace para alumnos copiado · solo ven este álbum'); }
           if(navigator.share&&window.matchMedia('(max-width:720px)').matches){ navigator.share({title:'Fotos y videos · IDEA',url:url}).catch(function(){}); return; }
           if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(ok,function(){window.prompt('Copia este enlace:',url);});
           else window.prompt('Copia este enlace:',url);

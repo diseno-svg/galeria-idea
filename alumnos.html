@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Fotos y videos · IDEA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#FCB72D;--navy:#01275C;--ink:#0A1E3D;--ease:cubic-bezier(.22,1,.36,1);
+    --font:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{min-height:100svh;font-family:var(--font);color:#fff;background:#1D4F95;overflow-x:hidden;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  body.noscroll{overflow:hidden}
+  .bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(165deg,#3F86CF 0%,#2B67B0 45%,#1D4F95 100%);overflow:hidden}
+  .bg i{position:absolute;border-radius:50%;opacity:.8;will-change:transform}
+  .bg .b1{width:70vmax;height:70vmax;left:-25vmax;top:-30vmax;background:radial-gradient(circle,rgba(159,211,250,.75),rgba(159,211,250,0) 65%);animation:m1 24s ease-in-out infinite alternate}
+  .bg .b2{width:60vmax;height:60vmax;right:-25vmax;bottom:-25vmax;background:radial-gradient(circle,rgba(15,59,128,.9),rgba(15,59,128,0) 65%);animation:m2 28s ease-in-out infinite alternate}
+  @keyframes m1{to{transform:translate3d(18vmax,12vmax,0) scale(1.1)}}
+  @keyframes m2{to{transform:translate3d(-16vmax,-14vmax,0) scale(.9)}}
+  .ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .logo{fill:currentColor;stroke:none;display:block}
+
+  header{display:flex;justify-content:center;padding:calc(18px + env(safe-area-inset-top)) 16px 6px}
+  header svg{width:min(190px,52vw);height:auto;color:#fff;filter:drop-shadow(0 2px 10px rgba(1,23,55,.35))}
+  .head{max-width:1100px;margin:0 auto;padding:22px 16px 8px;text-align:center;animation:up .9s var(--ease) both}
+  .kick{font-size:11.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#CFE4F7}
+  h1{margin-top:10px;font-size:clamp(26px,5.4vw,46px);font-weight:800;line-height:1.08;letter-spacing:-.02em;text-shadow:0 2px 18px rgba(1,23,55,.45);text-wrap:balance}
+  .meta{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:14px}
+  .meta span{padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);font-size:13px;font-weight:600}
+  .meta span.svc{background:var(--gold);color:#1d1402;border-color:transparent}
+  .hint{margin-top:14px;font-size:13.5px;color:#D9E9F8}
+  @keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+  .grid{max-width:1100px;margin:18px auto 0;padding:0 16px calc(40px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  @media(min-width:900px){.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}}
+  .card{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+    cursor:pointer;opacity:0;transform:translateY(14px);animation:up .7s var(--ease) forwards;animation-delay:calc(var(--i) * 35ms)}
+  .card img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .5s,transform .6s var(--ease)}
+  .card img.in{opacity:1}
+  .card:hover img{transform:scale(1.05)}
+  .card .vb{position:absolute;left:8px;bottom:8px;display:flex;align-items:center;gap:5px;padding:4px 9px 4px 7px;border-radius:999px;background:rgba(1,23,55,.65);font-size:11.5px;font-weight:700}
+  .card .vb .ic{width:13px;height:13px;fill:#fff;stroke:none}
+  .card .dl{position:absolute;right:8px;top:8px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(1,23,55,.6);color:#fff;display:grid;place-items:center;cursor:pointer;opacity:.95}
+  .card .dl:hover{background:var(--gold);color:#000}
+  .card .dl .ic{width:17px;height:17px}
+
+  .state{max-width:520px;margin:12vh auto 0;padding:0 24px;text-align:center}
+  .state h2{font-size:24px;font-weight:800;margin:14px 0 8px}
+  .state p{color:#D9E9F8;font-size:15px;line-height:1.5}
+  .spin{width:38px;height:38px;margin:0 auto;border-radius:50%;border:3px solid rgba(255,255,255,.25);border-top-color:var(--gold);animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .state .big{width:56px;height:56px;margin:0 auto;color:var(--gold)}
+
+  .lb{position:fixed;inset:0;z-index:20;background:rgba(1,16,38,.94);display:none;flex-direction:column}
+  .lb.on{display:flex;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0}}
+  .lb-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px}
+  .lb-top .n{flex:1;font-size:13px;font-weight:600;color:#BFD6EE}
+  .btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:999px;border:0;font:700 14px var(--font);cursor:pointer}
+  .btn.gold{background:var(--gold);color:#000}
+  .ib{width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer}
+  .ib:hover{background:rgba(255,255,255,.22)}
+  .lb-stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:0 12px calc(14px + env(safe-area-inset-bottom))}
+  .lb-stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+  .lb-stage .fr{position:relative;width:min(100%,calc((100svh - 120px) * .5625));height:100%;max-height:100%;border-radius:10px;overflow:hidden;background:#000}
+  .lb-stage .fr.h{width:min(100%,1100px);height:auto;aspect-ratio:16/9}
+  .lb-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  /* Tapa el botón «abrir en una ventana nueva» del reproductor de Drive */
+  .lb-stage .cap{position:absolute;top:0;right:0;width:64px;height:64px;z-index:2}
+  .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3}
+  .nav.p{left:14px}.nav.n{right:14px}
+  @media(max-width:720px){.nav{display:none}}
+  .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;z-index:30;
+    padding:11px 18px;border-radius:999px;background:#fff;color:var(--ink);font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:.35s var(--ease);pointer-events:none}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  footer{text-align:center;font-size:12px;color:#BFD6EE;padding:0 16px 28px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.card{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="bg"><i class="b1"></i><i class="b2"></i></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-iso" viewBox="0 0 867 694"><path class="logo" fill-rule="evenodd" d="M451.5 10.2c-10.4.5-19.3 1.2-19.7 1.6s7.3 12.7 17 27.4l34.5 52.3 26.2 39.5 34 51.5c17.6 26.6 16.5 24 10.8 26.9L401.9 286c-.4 0-11.2-8.6-24-19s-27-22-31.4-25.4l-8-6.3-13.8.5c-10.8.4-13.7.8-13.5 1.8.2.7 4.8 6.6 10.4 13.1l53.5 62.8c1.8 2 2.6 12 7.4 96.4 1.4 26 1.6 27.2 4 25.6 20.7-14.7 20.3-14.3 21.6-25.2.6-4.3 2.1-14.1 3.5-21.8s3-17 3.4-20.5c2-14.2 5.3-30 6.4-30.9.6-.5 9.7-3 20.1-5.5l21-5.1 81-20.6c51.7-13 47-12.4 47.8-5.7.2 2.4 1.8 13.8 3.5 25.3l3.5 24.5c.7 5.2 6.4 42.7 8.7 57 1 6.9 3.4 21.7 5 33l11.2 75c.6 4.1 1.4 7.9 1.8 8.3s5.4-2.8 11.1-7.3l19.6-15.2c6.6-5 9.3-7.6 9.3-9.2 0-3.4 5.1-84 7-110.1l3.6-54.5a1629 1629 0 0 1 4.7-64.8c.2-1.3 5.7-3.6 30.7-13.2 46.4-17.7 48.1-18.5 71.5-32.2 27.2-16 40.8-25.9 55-40.2q32.7-32.6 10.2-41.2c-9.2-3.6-17.8-4.4-46.3-4.4-29.2 0-24-.6-62.1 7.6-6.2 1.3-14.3 3.6-18 5L709 148l-48.8 17-15.4 5.3-8.6-8.4c-10-9.7-71.2-70-120.7-119.2L481.4 9l-5.4.2c-3 0-14 .5-24.5 1M374 111.5c-51.9 6.9-90.3 20.5-129.4 46a289 289 0 0 0-127 184.6c-2.7 12.5-2.4 14 2.6 10.5 2-1.3 11.9-7.7 22-14 19.3-12.5 20-13.1 21.9-18.6 2.5-7.6 9-23.7 11.2-27.5l2.3-4 22.4-.5c21.5-.5 22.7-.6 26.5-3l16-9.2c11.8-6.9 13.8-8.4 12.9-10a330 330 0 0 0-31.9-.8c-17.3 0-31.6-.4-31.9-.8-1.4-2.4 23.3-33.1 37.1-46.3 21.1-20 46.6-37 73.3-48.7 9.6-4.2 28-11.2 29.6-11.2s-.4 3.4-4.7 7.5c-9 9-25.9 31.3-25.9 34.4 0 1.4 18.1 1.5 22.7.2 1.8-.5 6.6-4.4 12-9.8q19.7-19.8 40.4-26.8c4-1.4 8-2.5 9-2.5 1.8 0 1.4-4.5 4.2 53.7.6 14.4 1.5 26.4 1.9 26.8.9.9 20.7-12 21.5-14.1a904 904 0 0 0-2.3-58.6l-.7-9.8h4.5c17.5 0 43 13.2 62.1 32.3a72 72 0 0 0 11 9.7 77 77 0 0 0 20.4-7.6c.3-.8-1.8-5.2-4.8-9.7l-31.6-50.4c-8.8-14-11.4-17.5-13.8-18.3-12.2-4-63.3-6.2-83.5-3.5m-86 179.2-20.5 11.8c-68.1 38.4-82.3 47-112.5 68.2-4.1 3-10 7-13 9.1a258 258 0 0 0-26.5 20c-27.4 22.9-39 33-42.6 37.4C28.5 489.8 10 527.9 10 566.4c0 31.3 5.7 48.4 21.3 64C63 662 121.5 673.8 192 662.5a203 203 0 0 1 19.6-2.5c4 0 8.5-2.2 6.7-3.3a169 169 0 0 0-16.4-2.2c-41-4.2-53.7-6.5-71-13-37.6-14-51.2-25.8-55-47.7-5.6-33.2 28.4-75.4 91.2-113l17.5-10.8a247 247 0 0 1 29.9-16.8 1199 1199 0 0 1 37.5-14.7l44-17c50.6-19.7 49.7-19.3 50.2-21.3.7-2.4-3.2-57-4.3-61.2-.8-3.2-6.9-11.3-33.7-45a32 32 0 0 0-8.7-8.7c-1.1-.1-6.3 2.3-11.5 5.4m254.9 51.8c-7.8 4-7.8 4-6.9 13 .5 3.9 1.1 12.7 1.5 19.8l.7 12.7H446v23h45.5c40 0 45.6.2 46.2 1.5.7 1.9-1.3 33-2.8 43a358 358 0 0 1-11.2 51.5l-2.3 6.5H413.5l-.3-25c0-13.7-.4-25.6-.7-26.3-.4-1.2-17.2 6.7-21.2 10-1 .8-1.3 6.3-1.3 21.4V514H279.9l-1.4-3.2c-1.2-3.1-5.7-22.7-7-31.1-.8-5.1-2.4-5.4-10.6-2.2s-7.8 1.7-4.4 20.1c1.4 7.4 2.5 14.2 2.5 15 0 1.3-5.5 1.5-41.8 1.3l-41.8-.1-9 6.2-14.2 9.7c-7.4 5-7.3 5.4 5.2 24.7A286 286 0 0 0 328 676a295 295 0 0 0 304.4-104.3c8.3-10.7 9.4-13.4 4.9-12.2-12.3 3-23.8 1-31.8-5.6l-4.9-3.9c-.1 0-4.9 5.2-10.6 11.6a247 247 0 0 1-71.5 55.5c-16.8 8.7-42.7 19-44.2 17.5-.3-.3 2.6-4 6.5-8 21-22.2 41.5-55 51.8-83.1 1-2.7 2.3-5.3 2.8-5.7s13.1-.8 27.9-.8H590v-23h-47.2l.7-3.2 3.2-14.8c3.9-17.8 7.2-42.7 8.4-63 .6-10.2 1.4-19.2 1.8-20 .6-1.1 3-1.6 9-1.8l8.1-.3v-22.8l-8.7-.3-8.8-.3-.3-4.5a729 729 0 0 0-3.8-42.5c-.8-2.1-2-1.9-9.5 2M195.5 538c-1.1 1.8 10.4 16.7 23 29.7 27 28.2 55.6 47.6 91.1 61.7 14 5.5 14.2 5.2 4.6-5.6a252 252 0 0 1-44.2-76.3 42 42 0 0 0-4.4-9.7 682 682 0 0 0-70.1.2m93 .1c-1.1 1.7 12.3 27.8 20.4 39.9 21.2 31.8 47.8 51 76.7 55.5q4.3.8 4.6-.7c.2-.7.2-22.4-.1-48.3l-.6-47-50.2-.3c-36.6-.1-50.4 0-50.9 1m125 .4c-1 2.4.4 92.6 1.4 93.6s9.4-1.4 18.7-5.4c22.5-9.7 47.8-33.8 64.1-60.9 7.5-12.5 14.6-26.8 13.9-28-.4-.5-19.3-.9-49-.9-44 0-48.6.2-49.2 1.6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 975 383"><path class="logo" fill-rule="evenodd" d="M237.8 10c-3.6.2-7 .8-7.3 1.2-.8.7 30 48.5 56.7 88.1 4.8 7 7.7 12.2 7.1 12.8-.5.5-19 9.9-41 20.9L213 153l-11-8.7c-21.7-17.2-22.4-17.7-29-17.4-7 .3-6.8 1.2 1.1 10.6l16.5 20 9 11.1 1.2 13c.6 7 1.4 20.7 1.8 30.2.3 9.5 1 17.5 1.5 17.8s3-1.1 5.4-3.2c4.8-4 5.5-5.6 7.5-18.4a354 354 0 0 1 5.5-29c.3-.4 4-1.6 8.2-2.5 4.3-1 17.3-4.2 28.8-7.2 48.6-12.6 52.5-13.5 52.5-11.6l1.5 11.8 3.5 25c7.6 56 11 78.9 12 79.8.9 1 9.6-4.9 15.2-10.2 5.3-5 5.2-3.7 10.9-103.1a510 510 0 0 1 1.4-20.6c.2-.5 6.3-3.4 13.6-6.3 45-17.8 77.9-40.6 77.9-53.7 0-7-5.5-9-25.5-8.8-20.4.2-37.2 4.4-77.2 19.5l-6.2 2.4-42.4-42.3L254.3 9l-5 .2c-2.6 0-7.8.4-11.5.7M199 54.6l-11.5 1.5a164 164 0 0 0-136.6 124c-2.4 10.3-2.1 11.2 2.4 7.8l9.7-6.6 8.7-5.8c1.1-.8 3.3-4.7 4.8-8.7 1.6-4 3.6-9 4.6-11l1.9-3.6 13.2-.4 13.3-.3 8.7-5c12.5-7.1 12-7.5-8.6-7.5a105 105 0 0 1-18-.8c-1.3-2.1 19.3-24.9 30.9-34.1 11.3-9 35.1-21.2 44.5-22.7 5.1-.8 5 .2-.6 5.6a65 65 0 0 0-12.4 15.8q0 1.2 6.3 1.2h6.3l5.4-5.6c9.8-10 27.6-20.1 30.4-17.4.5.5 1 10.6 1.2 22.6s.6 22 .9 22.2c.7.7 7.2-2.9 10.2-5.6l2.6-2.4-.4-19.1-.4-19.2 3 .1c9.3.4 19.5 5.7 33.3 17.4l7.4 6.2 3.9-1.7c2.1-1 4.4-2.4 5-3 1.2-1.5-22.9-38.7-26.5-41-4-2.5-32.9-4.4-43.6-2.9m259.2 79.7c-.8 1-1 15.1-1 46.3l.3 44.9h26l.3-45.4c.2-35.7 0-45.6-1-46.3-2.3-1.4-23.4-1-24.6.5m40.2 1.2c-.2 1.1-.3 21.8-.2 46l.3 44 30 .3c32.9.3 36.6-.2 48.1-5.8 29.7-14.5 30.7-65.6 1.6-80.4-9.7-4.9-14.4-5.5-48-5.8-30.6-.3-31.3-.3-31.8 1.7m111-1c-.5 1.4-1 87.6-.6 89.8.3 1.6 3 1.7 42 1.5l41.7-.3v-20l-24 .3c-13.2.2-26.2 0-29-.5l-5-.8-.3-5.6c-.2-3 .2-6.7.7-8.1l1-2.6 14.3.3c7.9.2 19.2 0 25-.2l10.9-.6-.3-9.6-.3-9.6H666l-25.8-.3-6.3-.2.3-7.2.3-7.3 28.5-.5 28.5-.5.3-8.8c.2-6.4 0-8.9-1-9.2-2.7-1-81-1-81.4 0m136-.8-7.3.4-3.7 9.7L718 186l-16 41.5c0 .3 5.3.4 11.7.3l11.7-.3 3.1-8 3.1-8 19.3-.5a187 187 0 0 1 20.2 0 43 43 0 0 1 4.3 8.6l3.3 7.9 13.2.3c8 .2 13.1-.1 13.1-.7s-2.9-7.7-6.4-15.8l-21.1-49.8-10-23c-2.4-6-1.5-5.7-22.2-4.8m-592.8 22.7a977 977 0 0 0-41.7 23.7c-53 31.9-83.8 61.5-96.4 92.8-17.6 43.6 5 74 57.1 76.7 11.9.6 29.2-.8 32.4-2.6 2-1.1 2.3-1-15.4-5-21.6-4.8-29.6-8.3-38.7-16.8-20.9-19.5 1.7-52 57.2-82a646 646 0 0 1 71.9-28.9l4.4-1.6-.6-16.2-.5-16.3-10.3-13.5A77 77 0 0 0 160 153c-.8 0-4.2 1.5-7.5 3.3m373.3-2.8c-.5.4-.8 12.2-.8 26.2v25.4l15.8-.4c17.8-.4 21.3-1.5 27-8.4 6.3-7.6 7-25 1.5-32.8-5-7.2-11.2-9.4-28.3-10.1a80 80 0 0 0-15.2 0m224.4 7.6a632 632 0 0 0-10.2 29c0 .5 5.2.9 11.5.9 9.6 0 11.5-.2 11.5-1.5 0-1.8-10-28.6-11.1-30q-.8-.6-1.7 1.6M290 182.9c-2.4.7-2.5 1-2 8.2l.5 11.9v4.5l-25.5.5-25.5.5-.3 6.3-.3 6.2h25.6c22 0 25.6.2 26.2 1.5 1.7 4.5-6.5 51.2-9.7 55-.9 1-7.6 1.3-31.3 1.2l-30.2-.2-.3-14.7c-.3-16.3-.1-16-6.8-12.2-6 3.5-6.3 4.4-5.7 15 .4 6.8.2 9.8-.7 10.9-1 1.3-5.5 1.5-30.5 1.5-16.2 0-30-.3-30.9-.6-1.7-.6-2.9-4-4.6-12.9-1.8-8.7-2.4-9.7-5.8-8.3-5.2 2.2-5.4 2.7-3.6 11.2 2.3 11.4 4.1 10.6-23.3 10.7H81.5l-7 4.3c-3.8 2.3-7.1 5-7.3 6-.6 2.7 11.8 20.2 21.8 30.9 35.9 38 93 59.2 141 52.3 39-5.7 69.6-20.6 97.8-48a141 141 0 0 0 18.2-20.9c0-.2-3.5-.8-7.7-1.2s-9.2-1.3-11-2l-3.1-1.3-10.9 10.7a146 146 0 0 1-36.8 26.9c-9.6 4.8-20.6 8.6-21.7 7.4-.5-.5 2-4.4 5.4-8.8a120 120 0 0 0 21.8-35.2l3.3-8.2h14.1c16.8 0 17.7-.3 18-7.5l.1-5-12.9-.7c-7-.4-13.1-1-13.4-1.3s0-2.7.7-5.3c1.9-7 5-26.2 6.3-39.4l1.2-11.7 4-.3 4.1-.3v-12l-4.2-.3c-5-.4-4.9-.2-5.7-13.8-.8-13-1-13.3-7.6-11.5m257.4 78.5a10.3 10.3 0 0 0-2.9 17.5c6.4 5.6 19.5 4 23-2.9 5.3-10.3-7.9-19.9-20.1-14.6m25.7 0q-1.1 1.5-.9 10.7c.3 9.3.3 9.4 2.8 9.4 2.4 0 2.5-.3 2.8-6.7.2-3.8.6-6.8 1-6.8.3 0 3.8 3.4 7.7 7.6 9.4 10 10 9.7 10-4.2 0-10.2-.1-10.9-2-10.9s-2 .8-2.3 6.8a20 20 0 0 1-1 6.7c-.5 0-3.8-3.1-7.4-7-6.5-7-8.6-8.2-10.7-5.6m64.9-.3c-8 3.4-9.6 11.5-3.5 17.6 3.5 3.5 3.6 3.5 11 3.1 6.6-.3 7.8-.7 10.2-3.1 2.4-2.3 2.6-3 1.3-3.7-2-1.3-2.6-1.2-4.2.3-6.2 6.2-15.8 3.6-15.8-4.3 0-6.6 7.7-9.4 14.8-5.3 1.7 1 3.6 1.4 4.7 1 1.7-.7 1.7-1-.7-3.3-3-3-13.2-4.3-17.8-2.3m30.5.2c-8.5 4-9.4 14.4-1.5 19a22 22 0 0 0 17.6-.2c6.4-3.9 7-13.1 1.2-17.3a22 22 0 0 0-17.3-1.5m25.1.3a70 70 0 0 0 0 18.2c1 3.5 4.8 2.6 5.2-1.3s1.4-4.7 5.4-5c5-.5 6.7.3 8.3 4 2.8 6.8 8.4 6.2 5.8-.5-1.5-3.7-1.5-4.4-.1-7.3 3.3-6.9-1.2-9.7-15.2-9.7-7 0-8.9.3-9.4 1.6m31-1c-1.4 1.5-.7 19.1.9 20.4 2.4 2 4.5.4 4.5-3.5V274h7q12.2 0 13.6-5.4c.8-3.1-1-6.5-4.2-7.6a72 72 0 0 0-21.7-.3m37.6 0c-7.5 1.5-10 11.9-4.4 17.7 7.2 7.2 22.9 3.5 24.7-5.9 1.6-8.8-7.7-14.2-20.3-11.8m24.3.9c-.8 2-.8 8.5 0 15.2.6 4.7 1 5.3 2.8 5 1.6-.2 2.2-1.1 2.4-4l.3-3.8h6c5.8 0 5.9 0 7.6 3.7 3.3 6.9 8.4 5.5 5.3-1.4-1.6-3.6-1.6-4.3-.4-5.4 2.6-2.2 1.8-7.7-1.6-9.4-4.2-2.2-21.5-2.1-22.4 0m41.2-.2a91 91 0 0 0-12.2 19.9c1 1.7 4.1.7 6-2 3-4 14.2-4 17.4.1 2 2.6 6 3.7 6 1.7 0-1.3-8.9-16-11.3-18.7-2.3-2.6-3.6-2.8-6-1m19.9-.4c-1 1.5 1.8 3 6.4 3.3l4.5.3.3 8.8c.3 8.5.3 8.7 2.7 8.7s2.5-.1 2.5-9v-8.9l5.8-.3c4.3-.2 5.7-.7 5.7-1.8 0-1.7-26.9-2.8-28-1.1m67.9.5c-8.5 3.8-8.7 14.8-.4 19.1 3.7 1.9 13.2 2 16.8 0a10.5 10.5 0 0 0 2.4-16.7c-3.7-3.8-13.2-5-18.8-2.4m26 0c-.3.7-.3 5.5-.2 10.7.3 9.3.3 9.4 2.8 9.4 2.4 0 2.5-.3 2.8-6.7.2-3.8.6-6.8 1-6.8s3.5 3.2 7 7c4.6 5 7 7 8.8 7h2.5l-.3-10.7c-.3-10-.4-10.8-2.3-10.8s-2 .8-2.3 6.8a21 21 0 0 1-.9 6.7c-.3 0-3.5-3.1-7.2-7q-9.8-10.4-11.7-5.7m-566.6 2.4a61 61 0 0 0-10.2 17.5c1 1.6 3.9.7 6-1.9 3-3.8 13.8-3.6 16.7.2 1.9 2.5 5.7 3.4 5.7 1.4a36 36 0 0 0-3.7-7.3c-8-13.5-9.9-14.8-14.5-9.9m19.7-1.7c-.3.6 2 5.1 5 10 7.5 12 8.7 12 16.7 0 5.9-8.8 6.8-11 4.4-11-3.2 0-4.8 1.5-8.2 7.6-2 3.5-4 6.6-4.4 6.9s-2.6-2.8-4.7-6.7q-5.9-10.8-8.8-6.8m40 .3a45 45 0 0 0-.3 10.3c.3 8.2.5 9 2.4 9.2 2 .3 2.2-.2 2.6-9 .2-5.1 0-9.9-.5-10.6-1.2-1.6-3.6-1.5-4.3.1m23.7 8.4c-3.3 5.3-5.7 10-5.5 10.5 1.2 2 5.6-.2 6.6-3.3.2-.6 3.3-1.3 7-1.6 6.4-.4 6.6-.4 8.7 2.6 2.2 3 6.1 4.3 6.1 2 0-.6-2.1-4.6-4.7-8.8-9-14.7-9.9-14.8-18.2-1.4m24.1-8.4c.3.7 2.6 1.3 5.6 1.5l5.2.3v9c0 8.8 0 8.9 2.5 8.9 2.4 0 2.4-.2 2.7-8.7l.3-8.8 5-.5c2.6-.3 5-1 5.3-1.7.3-1-2.8-1.3-13.3-1.3s-13.6.3-13.3 1.3m40.3 0c-.3.7-.5 5.4-.3 10.3.3 8.3.5 9 2.5 9.2 2 .3 2.2-.3 2.8-6 1-10 .4-14.2-2.3-14.6-1.2-.2-2.4.3-2.7 1m366.5 9.3V282h5v-21h-5zm-186-7.6c-3 .5-3.5 1-3.5 3.1 0 2.4.3 2.5 5.9 2.5 4.5 0 6.1-.4 7-1.7 2-3.1-2.7-5-9.4-3.9m27.4.5c-1.7 4.5 4.5 7.1 12.3 5.1a3 3 0 0 0 0-5.9c-4.4-1.2-11.7-.7-12.3.8M548 266.6c-4.8 6 .8 13.7 8.8 12 3.5-.9 4.9-2.3 5.7-6.2 1.5-7.4-9.7-11.9-14.5-5.8m121-.6c-4.1 4.1-1.6 11.4 4.4 12.6 7.5 1.3 12.4-4.6 9.2-11.2-1.5-3.2-1.9-3.4-6.6-3.4-3.7 0-5.5.5-7 2m93 .7c-4.3 5.5-1 11.5 6.5 11.7 5.4.1 8.5-2.6 8.5-7.5 0-6.9-10.6-9.8-15-4.2m30.2 0c.3 2.6.6 2.8 5.8 3 6.1.4 9.8-1.3 8.7-4-.5-1.4-2-1.7-7.7-1.7h-7.1zm125.4-1.2c-6.1 6 0 15 8.5 12.5 9-2.7 7-14.1-2.6-14.1-2.6 0-5 .6-6 1.6m-88.9 2.5c-2.5 3.6-2 4.9 1.9 4.9 4 0 4.4-1.3 1.6-4.9l-1.8-2.4zm-452.4 1.4c-1.6 3.5-1.6 3.5 2.3 3.5 3.7 0 4.2-.9 2.5-4-1.5-2.7-3.5-2.5-4.8.5m88.8-.6c-1.7 3.2-1.2 4.1 2.5 4.1 4 0 4-.2 1.9-3.5-2-3-3-3.1-4.4-.6M94 293.2c0 3.8 19.4 23.2 33.2 33 11.2 8 34.6 19.3 36.4 17.5.4-.4-1.8-4-4.8-8a143 143 0 0 1-20.8-36.2l-2.6-7-20.7-.3c-16.2-.2-20.7 0-20.7 1m53 0c0 4.7 13.5 25.3 22.2 34 9.9 9.8 29.4 20.2 34.4 18.4.7-.3 1-8.9 1-26.7l-.1-26.4-28.7-.3c-21-.2-28.8 0-28.8 1m70 25.3V345h2.8c6.7 0 23.6-10.5 33.4-20.7 7.5-8 19.8-27.3 19.8-31.3q0-1-28-1h-28z"/></symbol>
+
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></symbol>
+  <symbol id="i-lockk" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+</defs></svg>
+
+<header><svg viewBox="0 0 975 383" role="img" aria-label="IDEA Aviation Corporation"><use href="#i-lock"/></svg></header>
+<main id="main"><div class="state"><div class="spin"></div><p style="margin-top:16px">Cargando tus fotos y videos…</p></div></main>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Visor">
+  <div class="lb-top">
+    <button class="ib" id="lbx" aria-label="Cerrar"><svg class="ic"><use href="#i-x"/></svg></button>
+    <span class="n" id="lbn"></span>
+    <button class="btn gold" id="lbdl"><svg class="ic"><use href="#i-dl"/></svg>Descargar</button>
+  </div>
+  <div class="lb-stage" id="lbs"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  var KEY='AIzaSyDG8OEUiJTqQdNck1NJZhOpD36Q1VBaAyQ';
+  var DATOS='https://www.googleapis.com/drive/v3/files/1eURdGqo8-mjYhzMJttVHpCFgzEoa-hd1?alt=media&key='+KEY;
+  var PLANB='https://script.google.com/macros/s/AKfycbyrG0n6aA9xGT6MTiMDLYwG3CD0E5ym5JdFAn89d6jcwludo2uJJem0xgO0q3jSEc72/exec?accion=datos';
+  var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function $(id){return document.getElementById(id);}
+  function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function ic(n){return '<svg class="ic"><use href="#i-'+n+'"/></svg>';}
+  var tt; function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on');},2600);}
+
+  // Mismo código que genera la galería al tocar «Compartir con alumnos».
+  function fnv(s,h){for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return h>>>0;}
+  function codigo(album){var s='idea·alumnos·'+album;return fnv(s,2166136261).toString(36)+fnv(s,3735928559).toString(36);}
+
+  var token=(new URLSearchParams(location.search).get('a')||'').trim().toLowerCase();
+  // El código no debe quedar en el historial de otras páginas si se comparte la pantalla.
+  var ITEMS=[], POS=0;
+
+  function falla(titulo,txt){
+    $('main').innerHTML='<div class="state"><svg class="big ic"><use href="#i-lockk"/></svg><h2>'+esc(titulo)+'</h2><p>'+esc(txt)+'</p></div>';
+  }
+  if(!/^[a-z0-9]{8,16}$/.test(token)){ falla('Enlace no válido','Pídele a IDEA el enlace completo de tus fotos y videos.'); return; }
+
+  function cargar(url,intento){
+    return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+      .then(function(d){if(!d||!d.contenido)throw new Error('vacío');return d;});
+  }
+  function obtener(){
+    return cargar(DATOS).catch(function(){return cargar(PLANB);})
+      .catch(function(){return new Promise(function(ok){setTimeout(ok,2500);}).then(function(){return cargar(DATOS);});});
+  }
+
+  function titulo(a,r){
+    var t='';
+    var ev=String(r.evento||'').split(' / ')[0].trim(), partes=a.split(/\s+-\s+/), ult=partes[partes.length-1]||'';
+    if(ev&&!/^general$/i.test(ev))t=ev;
+    else if(partes.length>=4&&ult&&!/^general$/i.test(ult))t=ult;
+    else if(/^EVENTOS\s*-/i.test(a)&&partes[1]&&!/^[A-Z]{3}$/.test(partes[1]))t=partes[1];
+    else if(r.tipoEvento&&r.tipoEvento!=='Sin especificar')t=r.tipoEvento;
+    var svc=String(r.servicio||'').replace(/^\d+_/,'').trim();
+    if(!t)t=svc||'Fotos y videos';
+    t=String(t).replace(/_/g,' ').replace(/\s+/g,' ').trim();
+    return t.charAt(0).toUpperCase()+t.slice(1);
+  }
+  function fecha(a){var m=String(a).match(/(20\d{2})-(\d{2})-(\d{2})/);return m?(+m[3])+' de '+MESES[+m[2]-1]+' de '+m[1]:'';}
+
+  obtener().then(function(d){
+    var porAlbum={};
+    (d.contenido||[]).forEach(function(r){
+      if(!r||!r.driveId||String(r.driveId).indexOf('gphotos:')===0||!r.album)return;
+      (porAlbum[r.album]=porAlbum[r.album]||[]).push(r);
+    });
+    var alb=null;
+    Object.keys(porAlbum).some(function(a){if(codigo(a)===token){alb=a;return true;}return false;});
+    if(!alb){ falla('Enlace no disponible','Este álbum ya no está disponible o el enlace está incompleto. Pídele a IDEA uno nuevo.'); return; }
+    // Solo queda en memoria el álbum de este enlace.
+    ITEMS=porAlbum[alb]; porAlbum=null; d=null;
+    ITEMS.sort(function(x,y){return String(x.nombre||'').localeCompare(String(y.nombre||''),'es',{numeric:true});});
+    pintar(alb);
+  }).catch(function(){
+    falla('No se pudo cargar','Revisa tu conexión e intenta de nuevo en unos minutos.');
+  });
+
+  function pintar(alb){
+    var r0=ITEMS[0], t=titulo(alb,r0), f=fecha(alb);
+    var nv=ITEMS.filter(function(r){return r.tipo==='Video';}).length, nf=ITEMS.length-nv;
+    var svc=String(r0.servicio||'').replace(/^\d+_/,'').trim();
+    var meta=[];
+    if(svc&&svc.toLowerCase()!==t.toLowerCase())meta.push('<span class="svc">'+esc(svc.toUpperCase())+'</span>');
+    if(r0.sede)meta.push('<span>'+esc(r0.sede)+'</span>');
+    if(f)meta.push('<span>'+esc(f)+'</span>');
+    var cuenta=[]; if(nf)cuenta.push(nf+(nf===1?' foto':' fotos')); if(nv)cuenta.push(nv+(nv===1?' video':' videos'));
+    document.title=t+' · IDEA';
+    var h='<section class="head"><div class="kick">Tus fotos y videos</div><h1>'+esc(t)+'</h1>'+
+      (meta.length?'<div class="meta">'+meta.join('')+'</div>':'')+
+      '<p class="hint">'+esc(cuenta.join(' · '))+' · Toca una para verla y descargarla</p></section><div class="grid" id="grid">';
+    ITEMS.forEach(function(r,i){
+      h+='<div class="card" data-i="'+i+'" style="--i:'+Math.min(i,30)+'"><img alt="" loading="lazy" data-src="https://drive.google.com/thumbnail?id='+encodeURIComponent(r.driveId)+'&sz=w400">'+
+        (r.tipo==='Video'?'<span class="vb">'+ic('play')+'Video</span>':'')+
+        '<button class="dl" data-dl="'+i+'" aria-label="Descargar">'+ic('dl')+'</button></div>';
+    });
+    h+='</div><footer>IDEA Aviation Corporation · Instituto de Especialidades Aeronáuticas</footer>';
+    $('main').innerHTML=h;
+    [].forEach.call(document.querySelectorAll('.card img'),function(im){
+      im.onload=function(){im.classList.add('in');}; im.onerror=function(){im.style.display='none';};
+      im.src=im.getAttribute('data-src');
+    });
+  }
+
+  function descargar(i){
+    var r=ITEMS[i]; if(!r)return;
+    toast('Descargando…');
+    var a=document.createElement('a');
+    a.href='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.driveId)+'?alt=media&key='+KEY;
+    a.download=r.nombre||''; a.target='_blank'; a.rel='noopener noreferrer';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  function ver(i){
+    POS=(i+ITEMS.length)%ITEMS.length; var r=ITEMS[POS], s=$('lbs'), id=encodeURIComponent(r.driveId);
+    $('lbn').textContent=(POS+1)+' de '+ITEMS.length;
+    var nav='<button class="ib nav p" id="lbp" aria-label="Anterior">'+ic('l')+'</button><button class="ib nav n" id="lbnx" aria-label="Siguiente">'+ic('r')+'</button>';
+    if(r.tipo==='Video'){
+      // Reproductor de Drive encerrado: sin ventanas nuevas ni salida a Drive.
+      s.innerHTML=nav+'<div class="fr"><iframe sandbox="allow-scripts allow-same-origin" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer" src="https://drive.google.com/file/d/'+id+'/preview"></iframe><div class="cap"></div></div>';
+    } else {
+      s.innerHTML=nav+'<img alt="" src="https://drive.google.com/thumbnail?id='+id+'&sz=w1600">';
+    }
+    $('lbp').onclick=function(){ver(POS-1);}; $('lbnx').onclick=function(){ver(POS+1);};
+  }
+  function abrir(i){ver(i);$('lb').classList.add('on');document.body.classList.add('noscroll');}
+  function cerrar(){$('lb').classList.remove('on');$('lbs').innerHTML='';document.body.classList.remove('noscroll');}
+
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('[data-dl]'); if(t){e.stopPropagation();descargar(+t.getAttribute('data-dl'));return;}
+    t=e.target.closest('.card'); if(t){abrir(+t.getAttribute('data-i'));}
+  });
+  $('lbx').onclick=cerrar; $('lbdl').onclick=function(){descargar(POS);};
+  document.addEventListener('keydown',function(e){
+    if(!$('lb').classList.contains('on'))return;
+    if(e.key==='Escape')cerrar(); else if(e.key==='ArrowLeft')ver(POS-1); else if(e.key==='ArrowRight')ver(POS+1);
+  });
+  // Deslizar en el teléfono
+  var x0=null;
+  $('lbs').addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+  $('lbs').addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50)ver(POS+(dx<0?1:-1));},{passive:true});
+  document.addEventListener('contextmenu',function(e){if(e.target.closest('.lb-stage'))e.preventDefault();});
+})();
+</script>
+</body>
+</html>
