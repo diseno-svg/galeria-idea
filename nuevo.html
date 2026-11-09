@@ -3090,6 +3090,37 @@
     var _od=window.onData; window.onData=function(){var r=_od.apply(this,arguments);try{pintar();sync();}catch(e){}return r;};
     if(ALL.length)pintar();
   })();
+
+  // ── v17: las piezas editadas (estado «Listo») se agrupan en un álbum por sede ──
+  (function(){
+    var SEDES={BRM:'Barquisimeto',CCS:'Caracas',MAR:'Maracaibo',PMV:'Margarita',SCI:'San Cristóbal',VLN:'Valencia',CHA:'Charallave'};
+    function sedeDe(r){
+      if(r.sede)return String(r.sede).replace(/San Cristobal/i,'San Cristóbal');
+      var a=String(r.album||'').toUpperCase();
+      for(var k in SEDES){var n=SEDES[k].toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+        if(a.indexOf(' '+k+' ')>=0||a.indexOf(n)>=0)return SEDES[k];}
+      return 'Sin sede';
+    }
+    window.__albumEditado=function(r){return /listo/i.test(r.estado||'')&&String(r.driveId||'').indexOf('gphotos:')<0;};
+    var _od=window.onData;
+    window.onData=function(rows){
+      (rows||[]).forEach(function(r){
+        if(!window.__albumEditado(r)||r._albOrig)return;
+        var sd=sedeDe(r); r._albOrig=r.album||''; r.album='EDITADOS · '+sd; if(!r.sede&&sd!=='Sin sede')r.sede=sd;
+      });
+      return _od.apply(this,arguments);
+    };
+    var _ai=window.albumInfo;
+    window.albumInfo=function(r){
+      var a=r.album||'';
+      if(a.indexOf('EDITADOS · ')===0){
+        if(INFO[a])return INFO[a];
+        var inf=_ai(r); inf.title='Editados · '+a.slice(11); inf.svc='Piezas terminadas'; inf.group=''; inf.date='';
+        return (INFO[a]=inf);
+      }
+      return _ai(r);
+    };
+  })();
 </script>
 
 <div class="calwrap" id="calwrap"><div class="calbar"><div class="ctit">Calendario</div><div class="calviews"><button id="cal-vmes" class="calviewbtn active">Mes</button><button id="cal-vtab" class="calviewbtn">Tabla</button></div><div class="calctrl" id="calctrl-mes"><button class="calnav" id="cal-prev">‹</button><span class="callabel" id="cal-label"></span><button class="calnav" id="cal-next">›</button></div><select id="calmes" style="display:none"></select><button class="cclose" id="calclose" title="Cerrar">✕</button></div><div class="calbody" id="calbody"></div></div>

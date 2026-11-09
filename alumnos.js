@@ -32,6 +32,7 @@
   }
 
   function titulo(a,r){
+    if(a.indexOf('EDITADOS · ')===0)return 'Videos editados · '+a.slice(11);
     var t='';
     var ev=String(r.evento||'').split(' / ')[0].trim(), partes=a.split(/\s+-\s+/), ult=partes[partes.length-1]||'';
     if(ev&&!/^general$/i.test(ev))t=ev;
@@ -49,6 +50,10 @@
     var porAlbum={};
     (d.contenido||[]).forEach(function(r){
       if(!r||!r.driveId||String(r.driveId).indexOf('gphotos:')===0||!r.album)return;
+      if(/listo/i.test(r.estado||'')){var sd=r.sede?String(r.sede).replace(/San Cristobal/i,'San Cristóbal'):'';
+        if(!sd){var A=String(r.album||'').toUpperCase(),M={BRM:'Barquisimeto',CCS:'Caracas',MAR:'Maracaibo',PMV:'Margarita',SCI:'San Cristóbal',VLN:'Valencia',CHA:'Charallave'};
+          for(var k in M){var nn=M[k].toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');if(A.indexOf(' '+k+' ')>=0||A.indexOf(nn)>=0){sd=M[k];break;}}}
+        r.album='EDITADOS · '+(sd||'Sin sede');}
       (porAlbum[r.album]=porAlbum[r.album]||[]).push(r);
     });
     var alb=null;
