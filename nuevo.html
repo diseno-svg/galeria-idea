@@ -3087,8 +3087,17 @@
     // Solo en la vista de inicio (se esconde al buscar, filtrar o abrir un álbum, igual que la portada).
     function sync(){var h=$('hero');sec.classList.toggle('off',!!(h&&h.classList.contains('off')));}
     var _uh=window.updateHero; window.updateHero=function(){_uh.apply(this,arguments);sync();};
-    var _od=window.onData; window.onData=function(){var r=_od.apply(this,arguments);try{pintar();sync();}catch(e){}return r;};
-    if(ALL.length)pintar();
+    // Respaldo: si el catálogo todavía no trae fechas en el calendario, se lee itinerario.json (copia de la tabla 10.5).
+    var EXTRA=null;
+    function conFecha(){return (CAL||[]).some(function(r){return /^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');});}
+    function respaldo(){
+      if(EXTRA||conFecha())return;
+      fetch('itinerario.json?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+        EXTRA=(d&&d.itinerario)||[]; if(!conFecha()&&EXTRA.length){CAL=(CAL||[]).concat(EXTRA);} pintar(); sync();
+      }).catch(function(){});
+    }
+    var _od=window.onData; window.onData=function(){var r=_od.apply(this,arguments);try{pintar();sync();respaldo();}catch(e){}return r;};
+    if(ALL.length){pintar();respaldo();}
   })();
 
   // ── v17: las piezas editadas (estado «Listo») se agrupan en un álbum por sede ──
