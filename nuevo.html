@@ -1073,6 +1073,8 @@
   .itin-it .pp b{color:#0A1E3D;font-weight:700}
   .itin-empty{color:#CFE4F7;font-size:12px;text-align:center;padding:14px 0}
   .itin-none{margin-top:14px;text-align:center;color:#fff;background:rgba(255,255,255,.1);border:1px dashed rgba(255,255,255,.35);border-radius:16px;padding:18px;font-size:14px}
+  /* ── v18: Banco de fotos ── */
+  .seg-b#qf-banco.active{background:var(--gold);color:#000}
 </style>
 </head>
 <body>
@@ -2446,7 +2448,7 @@
         '<div class="up-lbl">O curso especial</div><select class="up-in up-sel" id="upesp"><option value="">Elige un curso especial…</option>'+ESP.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(n){return '<option value="'+esc(codigo(n))+'">'+esc(n)+'</option>';}).join('')+'</optgroup>';}).join('')+'</select>'+
         '<div class="up-lbl">Sede</div><div class="up-chips" id="upsede">'+SEDES.map(function(s){return '<button class="up-chip" data-v="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
         '<div class="up-lbl">Fecha de la captura</div><input class="up-in" type="date" id="upfecha">'+
-        '<div class="up-lbl">¿Qué vas a subir?</div><div class="up-chips" id="uptipo"><button class="up-chip on" data-v="general">Material general del curso</button><button class="up-chip" data-v="evento">De un evento o grupo</button><button class="up-chip" data-v="editado">Video editado (pieza terminada)</button></div>'+
+        '<div class="up-lbl">¿Qué vas a subir?</div><div class="up-chips" id="uptipo"><button class="up-chip on" data-v="general">Material general del curso</button><button class="up-chip" data-v="evento">De un evento o grupo</button><button class="up-chip" data-v="editado">Video editado (pieza terminada)</button><button class="up-chip" data-v="banco">⭐ Banco de fotos (las mejores)</button></div>'+
         '<p class="up-hint" id="uphint">Fotos y videos del curso que no son de una actividad en particular. La carpeta se marca como «general».</p>'+
         '<div class="up-row" id="uprow" style="display:none">'+
           '<div><div class="up-lbl">Grupo <small>opcional</small></div><input class="up-in" id="upgrupo" placeholder="TDC-91-MJ-AB" autocomplete="off" autocapitalize="characters"></div>'+
@@ -2467,7 +2469,8 @@
     function nombre(){
       if(!st.s||st.d===null||!$('upfecha').value)return '';
       var p=[st.s]; if(st.d)p.push(st.d);
-      p.push($('upfecha').value, limpiar($('upgrupo').value)||'sin_grupo', limpiar($('upevento').value)||'general');
+      if(MODO==='banco')p.push($('upfecha').value,'sin_grupo','banco_de_fotos');
+      else p.push($('upfecha').value, limpiar($('upgrupo').value)||'sin_grupo', limpiar($('upevento').value)||'general');
       return p.join(' - ');
     }
     function pintar(){
@@ -2526,6 +2529,7 @@
     })();
     var HINT={general:'Fotos y videos del curso que no son de una actividad en particular. La carpeta se marca como «general».',
       evento:'Escribe el grupo y/o qué se estaba haciendo (por ejemplo «práctica de evacuación»).',
+      banco:'Solo las mejores fotos del curso (de Google Fotos o de hoy): bien encuadradas, uniforme impecable, sin desorden atrás. Quedan en la pestaña «Banco» para que todos las usen.',
       editado:'Para videos ya terminados. Elige la sede y se abre su carpeta dentro de «Editado»: súbelo ahí directo, sin crear carpetas.'};
     $('uptipo').onclick=function(e){
       var b=e.target.closest('.up-chip'); if(!b)return;
@@ -2962,7 +2966,7 @@
       // Solo fotos escogidas a mano: las que estén en la carpeta «PORTADA» de Drive (Sin Editar › PORTADA).
       // Si todavía no hay al menos 6, se usan las fotos fijas de la portada (también escogidas).
       var fotos=(window.ALL||[]).filter(function(r){
-        return r.tipo==='Foto'&&r.driveId&&/^portada\b/i.test(String(r.album||'').trim())&&!/\.(heic|heif)$/i.test(r.nombre||'');
+        return r.tipo==='Foto'&&r.driveId&&(/^portada\b/i.test(String(r.album||'').trim())||/banco_de_fotos/i.test(String(r.album||'')))&&!/\.(heic|heif)$/i.test(r.nombre||'');
       });
       if(fotos.length<6)fotos=[];
       fotos.sort(function(a,b){return String(b.album||'').localeCompare(String(a.album||''));});
@@ -3128,6 +3132,31 @@
         return (INFO[a]=inf);
       }
       return _ai(r);
+    };
+  })();
+
+  // ── v18: Banco de fotos (las mejores, por curso) ──
+  // Carpetas «CURSO - SEDE - fecha - sin_grupo - banco_de_fotos». Pestaña «Banco» y títulos «Banco de fotos · Curso».
+  (function(){
+    var BANCO=/\bbanco_de_fotos\b/i;
+    window.__esBanco=function(r){return BANCO.test(String(r.album||''))||BANCO.test(String(r.evento||''));};
+    var fav=$('qf-fav'), b=document.createElement('button');
+    b.className='seg-b'; b.id='qf-banco'; b.innerHTML=ic('photos')+'Banco'; b.title='Las mejores fotos de cada curso';
+    if(fav)fav.parentNode.insertBefore(b,fav);
+    var solo=false;
+    var _p=window.passes; window.passes=function(r,skip){ if(solo&&!window.__esBanco(r))return false; return _p(r,skip); };
+    b.onclick=function(){ solo=!solo; if(solo){$('f-tipo').value='';$('f-estado').value='';} apply(); };
+    var _s=window.syncQF; window.syncQF=function(){ _s.apply(this,arguments); b.classList.toggle('active',solo); if(solo)$('qf-all').classList.remove('active'); };
+    ['qf-all','qf-foto','qf-video','qf-edit','qf-fav'].forEach(function(id){var e=$(id);if(e)e.addEventListener('click',function(){if(solo){solo=false;apply();}},true);});
+    var _ca=window.clearAll; window.clearAll=function(){ solo=false; return _ca.apply(this,arguments); };
+    // Título del álbum
+    var _ai=window.albumInfo;
+    window.albumInfo=function(r){
+      var a=r.album||''; if(!BANCO.test(a))return _ai(r);
+      if(INFO[a]&&INFO[a]._banco)return INFO[a];
+      var inf=_ai(r), c=String(a).split(/\s+-\s+/)[0].trim().toUpperCase(), k=window.__CURSOS&&window.__CURSOS[c];
+      inf.title='Banco de fotos · '+(k?k.label:(inf.svc||c)); inf.svc=k?(k.sigla||''):inf.svc; inf._banco=true;
+      return (INFO[a]=inf);
     };
   })();
 </script>
