@@ -1041,6 +1041,38 @@
   .gact[disabled]{opacity:.6;pointer-events:none}
   .albbar .gact{height:36px}
   body.kiosco .gacts{display:none!important}
+  /* ── v16: itinerario de publicistas (semana actual) ── */
+  .itin{max-width:1240px;margin:22px auto 6px;padding:0 16px}
+  .itin.off,body.kiosco .itin{display:none}
+  .itin-h{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center}
+  .itin-h h2{font-size:clamp(20px,2.4vw,26px);font-weight:800;color:#fff;letter-spacing:-.01em}
+  .itin-h .wk{font-size:13px;color:#D9E9F8;font-weight:600}
+  .itin-nav{display:flex;gap:6px}
+  .itin-nav button{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;display:grid;place-items:center}
+  .itin-nav button:hover{background:#fff;color:#01275C}
+  .itin-nav button.hoy{width:auto;padding:0 12px;border-radius:999px;font:600 12.5px var(--font)}
+  .itin-sum{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .itin-sum span{padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.14);color:#fff}
+  .itin-sum .ok{background:#22c55e}.itin-sum .pe{background:#f59e0b;color:#1d1402}
+  .itin-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-top:14px}
+  @media(max-width:1000px){.itin-days{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+    .itin-day{flex:0 0 78%;scroll-snap-align:center}}
+  @media(min-width:600px) and (max-width:1000px){.itin-day{flex-basis:42%}}
+  .itin-day{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:12px;min-height:120px}
+  .itin-day.today{background:rgba(255,255,255,.2);border-color:var(--gold);box-shadow:0 0 0 2px rgba(252,183,45,.35)}
+  .itin-day .dh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;color:#fff}
+  .itin-day .dh b{font-size:14px;font-weight:800}.itin-day .dh small{font-size:12px;color:#CFE4F7}
+  .itin-day.today .dh small{color:var(--gold);font-weight:700}
+  .itin-it{background:#fff;color:#0A1E3D;border-radius:12px;padding:9px 10px;margin-top:7px;font-size:12.5px;line-height:1.35;border-left:4px solid #cbd5e1}
+  .itin-it.ok{border-left-color:#22c55e}.itin-it.pe{border-left-color:#f59e0b}.itin-it.pr{border-left-color:#3F86CF}
+  .itin-it .cu{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:800;font-size:12.5px}
+  .itin-it .st{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap}
+  .itin-it.ok .st{background:#dcfce7;color:#166534}.itin-it.pe .st{background:#fef3c7;color:#92400e}.itin-it.pr .st{background:#e0edfb;color:#1D4F95}
+  .itin-it .q{margin-top:3px;color:#334155}
+  .itin-it .pp{margin-top:4px;color:#5A7395;font-size:11.5px}
+  .itin-it .pp b{color:#0A1E3D;font-weight:700}
+  .itin-empty{color:#CFE4F7;font-size:12px;text-align:center;padding:14px 0}
+  .itin-none{margin-top:14px;text-align:center;color:#fff;background:rgba(255,255,255,.1);border:1px dashed rgba(255,255,255,.35);border-radius:16px;padding:18px;font-size:14px}
 </style>
 </head>
 <body>
@@ -2986,6 +3018,77 @@
       medir(); estado();
       return true;
     };
+  })();
+
+  // ── v16: itinerario de los publicistas (qué van a subir y cuándo) ──
+  // Lee el calendario del catálogo (tabla «10.5 Calendario Semanal», columna Fecha) y marca solo
+  // lo que ya está en la galería: mismo curso y misma fecha (y la sede, si se conoce).
+  (function(){
+    var main=$('main'); if(!main)return;
+    var sec=document.createElement('section'); sec.className='itin'; sec.id='itin'; sec.style.display='none';
+    main.parentNode.insertBefore(sec,main);
+    var DIAS=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+    var MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    var CUR={PPA:'PILOTO',DDV:'DESPACHADOR','NEURO-ORATORIA':'NEURO ORATORIA','AVIÓNICA':'AVIONICA','INGLÉS':'INGLES'};
+    function norm(t){return String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/^\d+_/,'').trim();}
+    function curso(s){var k=String(s||'').toUpperCase().trim();return norm(CUR[k]||k);}
+    function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+    function lunes(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
+    var base=lunes(new Date());
+    function subido(r){
+      var c=curso(r.servicio), f=r.fecha; if(!f||!c)return false;
+      var sedes=norm([r.sede1,r.sede2,r.sede3].filter(Boolean).join(','));
+      return ALL.some(function(x){
+        if(String(x.album||'').indexOf(f)<0)return false;
+        var xs=norm(svcLabel(x.servicio)), xa=norm(String(x.album||'').split(/\s+-\s+/)[0]);
+        if(xs!==c&&xa!==c&&!(c==='PILOTO'&&/PILOTO|PPA/.test(xa)))return false;
+        return !sedes||!x.sede||sedes.indexOf(norm(x.sede))>=0;
+      });
+    }
+    function pintar(){
+      var filas=(CAL||[]).filter(function(r){return /^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');});
+      var fin=new Date(base); fin.setDate(fin.getDate()+6);
+      var hoy=iso(new Date()), a=iso(base), b=iso(fin);
+      var sem=filas.filter(function(r){var f=r.fecha.slice(0,10);return f>=a&&f<=b;});
+      var nOk=0,nPe=0,nPr=0, dias='';
+      for(var i=0;i<7;i++){
+        var d=new Date(base); d.setDate(d.getDate()+i); var f=iso(d);
+        var its=sem.filter(function(r){return r.fecha.slice(0,10)===f;});
+        var h='';
+        its.forEach(function(r){
+          var est=subido(r)?'ok':(f<hoy?'pe':(f===hoy?'pr':'pr'));
+          if(est==='ok')nOk++; else if(est==='pe')nPe++; else nPr++;
+          var lab={ok:'✓ Subido',pe:'Pendiente',pr:(f===hoy?'Hoy':'Programado')}[est];
+          var pp=[]; if(r.persona1)pp.push('<b>'+esc(r.persona1)+'</b>'+(r.formato1?' · '+esc(r.formato1):'')+' <small>AM</small>');
+          if(r.persona2)pp.push('<b>'+esc(r.persona2)+'</b>'+(r.formato2?' · '+esc(r.formato2):'')+' <small>PM</small>');
+          if(r.persona3)pp.push('<b>'+esc(r.persona3)+'</b> <small>extra</small>');
+          h+='<div class="itin-it '+est+'"><div class="cu">'+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
+            (r.que?'<div class="q">'+esc(r.que)+'</div>':'')+(pp.length?'<div class="pp">'+pp.join('<br>')+'</div>':'')+'</div>';
+        });
+        dias+='<div class="itin-day'+(f===hoy?' today':'')+'"><div class="dh"><b>'+DIAS[i]+'</b><small>'+(f===hoy?'Hoy · ':'')+d.getDate()+' '+MES[d.getMonth()]+'</small></div>'+
+          (h||'<div class="itin-empty">Sin asignaciones</div>')+'</div>';
+      }
+      var rango=base.getDate()+' '+MES[base.getMonth()]+' – '+fin.getDate()+' '+MES[fin.getMonth()];
+      var cab='<div class="itin-h"><h2>Itinerario de los publicistas</h2><span class="wk">Semana del '+rango+'</span>'+
+        '<div class="itin-nav"><button data-w="-1" aria-label="Semana anterior">‹</button><button class="hoy" data-w="0">Esta semana</button><button data-w="1" aria-label="Semana siguiente">›</button></div></div>';
+      if(!sem.length){
+        sec.innerHTML=cab+'<div class="itin-none">'+(filas.length?'No hay asignaciones cargadas para esta semana.':'El itinerario todavía no está cargado. La CCO lo llena en Airtable › «10.5 Calendario Semanal», con la fecha de cada asignación.')+'</div>';
+      } else {
+        sec.innerHTML=cab+'<div class="itin-sum">'+(nOk?'<span class="ok">✓ '+nOk+' subido'+(nOk>1?'s':'')+'</span>':'')+(nPe?'<span class="pe">'+nPe+' pendiente'+(nPe>1?'s':'')+'</span>':'')+(nPr?'<span>'+nPr+' por grabar</span>':'')+'</div><div class="itin-days">'+dias+'</div>';
+        var t=sec.querySelector('.itin-day.today'); if(t&&window.matchMedia('(max-width:1000px)').matches){var box=sec.querySelector('.itin-days');box.scrollLeft=t.offsetLeft-box.offsetLeft-16;}
+      }
+      sec.style.display='';
+    }
+    sec.addEventListener('click',function(e){
+      var b=e.target.closest('[data-w]'); if(!b)return;
+      var w=+b.getAttribute('data-w'); if(w===0)base=lunes(new Date()); else base.setDate(base.getDate()+7*w);
+      pintar();
+    });
+    // Solo en la vista de inicio (se esconde al buscar, filtrar o abrir un álbum, igual que la portada).
+    function sync(){var h=$('hero');sec.classList.toggle('off',!!(h&&h.classList.contains('off')));}
+    var _uh=window.updateHero; window.updateHero=function(){_uh.apply(this,arguments);sync();};
+    var _od=window.onData; window.onData=function(){var r=_od.apply(this,arguments);try{pintar();sync();}catch(e){}return r;};
+    if(ALL.length)pintar();
   })();
 </script>
 
