@@ -2447,7 +2447,7 @@
       '<div class="sheet-head"><h2>Subir material</h2><button class="ibtn" data-close aria-label="Cerrar">'+ic('x')+'</button></div>'+
       '<div class="sheet-body">'+
         '<div class="up-steps"><i id="ust1"></i><i id="ust2"></i><i id="ust3"></i></div>'+
-        '<div class="up-lbl">Curso regular</div><div class="up-chips" id="upserv">'+REG.map(function(r){return '<button class="up-chip" data-v="'+r[0]+'">'+r[1]+(r[2]?' <small>'+r[2]+'</small>':'')+'</button>';}).join('')+'</div>'+
+        '<div class="up-lbl">Curso regular <small>puedes marcar varios</small></div><div class="up-chips" id="upserv">'+REG.map(function(r){return '<button class="up-chip" data-v="'+r[0]+'">'+r[1]+(r[2]?' <small>'+r[2]+'</small>':'')+'</button>';}).join('')+'</div>'+
         '<div class="up-lbl">O curso especial</div><select class="up-in up-sel" id="upesp"><option value="">Elige un curso especial…</option>'+ESP.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(n){return '<option value="'+esc(codigo(n))+'">'+esc(n)+'</option>';}).join('')+'</optgroup>';}).join('')+'</select>'+
         '<div class="up-lbl">Sede</div><div class="up-chips" id="upsede">'+SEDES.map(function(s){return '<button class="up-chip" data-v="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
         '<div class="up-lbl">Fecha de la captura</div><input class="up-in" type="date" id="upfecha">'+
@@ -2477,7 +2477,8 @@
       return p.join(' - ');
     }
     function pintar(){
-      [].forEach.call($('upserv').children,function(b){b.classList.toggle('on',b.getAttribute('data-v')===st.s);});
+      var lista=st.s?st.s.split(' Y '):[];
+      [].forEach.call($('upserv').children,function(b){b.classList.toggle('on',lista.indexOf(b.getAttribute('data-v'))>=0);});
       var esp=$('upesp'); esp.value=[].some.call(esp.options,function(o){return o.value&&o.value===st.s;})?st.s:''; esp.classList.toggle('set',!!esp.value);
       [].forEach.call($('upsede').children,function(b){b.classList.toggle('on',st.d!==null&&b.getAttribute('data-v')===st.d);});
       var n=nombre(), out=$('upname');
@@ -2493,13 +2494,19 @@
       }
       if(CREAR_ACTIVO&&!$('upgo').disabled&&$('upgo').textContent.indexOf('Creando')<0)
         $('upgo').innerHTML=ic('external')+(MODO==='editado'?'Crear carpeta en Editado y abrir Drive':'Crear carpeta y abrir Drive');
-      var conocido=REG.some(function(r){return r[0]===st.s&&!r[3];});
+      var conocido=(st.s?st.s.split(' Y '):[]).every(function(c){return REG.some(function(r){return r[0]===c&&!r[3];});});
       $('upwarn').style.display=(n&&(!conocido||st.d==='CHA'))?'block':'none';
       $('upgo').disabled=!n;
       $('ust1').classList.toggle('on',!!st.s); $('ust2').classList.toggle('on',st.d!==null); $('ust3').classList.toggle('on',!!n);
       try{localStorage.setItem('idea.up',JSON.stringify({s:st.s,d:st.d}));}catch(e){}
     }
-    $('upserv').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.s=b.getAttribute('data-v');pintar();};
+    // Se pueden marcar varios cursos (p. ej. una supervivencia de Tripulantes y Pilotos): la carpeta queda «TDC Y PILOTO PRIVADO - …».
+    $('upserv').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;var v=b.getAttribute('data-v');
+      var regs=REG.map(function(r){return r[0];});
+      var l=(st.s?st.s.split(' Y '):[]).filter(function(c){return regs.indexOf(c)>=0;});
+      var i=l.indexOf(v); if(i>=0)l.splice(i,1); else l.push(v);
+      l.sort(function(a,b){return regs.indexOf(a)-regs.indexOf(b);});
+      st.s=l.join(' Y '); pintar();};
     $('upesp').onchange=function(){st.s=this.value;pintar();};
     $('upsede').onclick=function(e){var b=e.target.closest('.up-chip');if(!b)return;st.d=b.getAttribute('data-v');pintar();};
     ['upfecha','upgrupo','upevento'].forEach(function(id){$(id).addEventListener('input',pintar);});
@@ -2920,7 +2927,13 @@
   // ── v14: títulos de álbum con el nombre del curso (también especiales) cuando el evento es genérico ──
   (function(){
     var GEN=/^(general|material(_|\s)?org[aá]nico|org[aá]nico|material|contenido|varios|sin_evento|sin evento)?$/i;
-    function curso(a){var c=String(a||'').split(/\s+-\s+/)[0].trim().toUpperCase();return window.__CURSOS&&window.__CURSOS[c]?{c:c,i:window.__CURSOS[c]}:null;}
+    // Varios cursos en una carpeta: «TDC Y PILOTO PRIVADO - …» → se toma el primero y se muestran todas las siglas.
+    function curso(a){var todos=String(a||'').split(/\s+-\s+/)[0].trim().toUpperCase().split(/\s+Y\s+/), c=todos[0];
+      if(!(window.__CURSOS&&window.__CURSOS[c]))return null;
+      var k={c:c,i:window.__CURSOS[c]};
+      if(todos.length>1){var sig=todos.map(function(t){var x=window.__CURSOS[t];return x?(x.sigla||t):t;});
+        k.i=Object.assign({},k.i,{sigla:sig.join(' · '),label:todos.map(function(t){var x=window.__CURSOS[t];return x?x.label:t;}).join(' y ')});}
+      return k;}
     // Si Airtable no reconoció el curso, se toma del nombre de la carpeta (así sale también en el filtro «Curso»).
     var _onData=onData;
     window.onData=function(rows){
@@ -2948,7 +2961,7 @@
         inf.svc=k.i.sigla||'';
       } else if(generico){
         inf.title=k.i.label; inf.svc=k.i.sigla||'';
-      } else if(!inf.svc){ inf.svc=k.i.sigla||''; }
+      } else if(!inf.svc||String(k.i.sigla||'').indexOf(' · ')>=0){ inf.svc=k.i.sigla||inf.svc||''; }
       return (INFO[a]=inf);
     };
   })();
@@ -3047,8 +3060,8 @@
       var sedes=norm([r.sede1,r.sede2,r.sede3].filter(Boolean).join(','));
       return ALL.some(function(x){
         if(String(x.album||'').indexOf(f)<0)return false;
-        var xs=norm(svcLabel(x.servicio)), xa=norm(String(x.album||'').split(/\s+-\s+/)[0]);
-        if(xs!==c&&xa!==c&&!(c==='PILOTO'&&/PILOTO|PPA/.test(xa)))return false;
+        var xs=norm(svcLabel(x.servicio)), xl=norm(String(x._albOrig||x.album||'').split(/\s+-\s+/)[0]).split(/\s+Y\s+/);
+        if(xs!==c&&xl.indexOf(c)<0&&!(c==='PILOTO'&&xl.some(function(t){return /PILOTO|PPA/.test(t);})))return false;
         return !sedes||!x.sede||sedes.indexOf(norm(x.sede))>=0;
       });
     }
