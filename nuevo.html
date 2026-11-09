@@ -3159,6 +3159,33 @@
       return (INFO[a]=inf);
     };
   })();
+
+  // ── v19: orden de los álbumes — primero lo último que se subió (eventos y material de cursos),
+  // después el Banco de fotos, luego los Editados por sede y al final Google Fotos ──
+  (function(){
+    function clave(r){return String(r.driveId||'').indexOf('gphotos:')===0?'__gp__':(r.album||'');}
+    function nivel(a){ if(a==='__gp__')return 0; if(a.indexOf('EDITADOS · ')===0)return 1; if(/banco_de_fotos/i.test(a))return 2; return 3; }
+    var _r=window.render;
+    window.render=function(){
+      try{
+        var info={};
+        VIEW.forEach(function(r,i){
+          var a=clave(r), x=info[a]||(info[a]={i:i,f:''});
+          var m=String(r.album||'').match(/(20\d{2}-\d{2}-\d{2})/), f=(m?m[1]:'')||String(r.fechaRegistro||'');
+          // La fecha que manda es la más reciente: la del evento o la de cuando se subió.
+          var reg=String(r.fechaRegistro||''); if(reg>f)f=reg;
+          if(f>x.f)x.f=f;
+        });
+        VIEW=VIEW.slice().sort(function(p,q){
+          var a=clave(p), b=clave(q); if(a===b)return 0;
+          var na=nivel(a), nb=nivel(b); if(na!==nb)return nb-na;
+          var fa=info[a].f, fb=info[b].f; if(fa!==fb)return fa<fb?1:-1;
+          return info[a].i-info[b].i;
+        });
+      }catch(e){}
+      return _r.apply(this,arguments);
+    };
+  })();
 </script>
 
 <div class="calwrap" id="calwrap"><div class="calbar"><div class="ctit">Calendario</div><div class="calviews"><button id="cal-vmes" class="calviewbtn active">Mes</button><button id="cal-vtab" class="calviewbtn">Tabla</button></div><div class="calctrl" id="calctrl-mes"><button class="calnav" id="cal-prev">‹</button><span class="callabel" id="cal-label"></span><button class="calnav" id="cal-next">›</button></div><select id="calmes" style="display:none"></select><button class="cclose" id="calclose" title="Cerrar">✕</button></div><div class="calbody" id="calbody"></div></div>
