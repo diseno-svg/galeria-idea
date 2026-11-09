@@ -2400,7 +2400,8 @@
     // reconoce el catálogo (fórmula «Servicio normalizado» de la tabla 5500 en Airtable).
     // Los marcados nuevo:1 todavía no los reconoce el catálogo: quedan en «⚠ revisar» hasta actualizar esa fórmula.
     var REG=[
-      ['PILOTO','Piloto Privado y Comercial','PPA · PCA'],
+      ['PILOTO PRIVADO','Piloto Privado','PPA',1],
+      ['PILOTO COMERCIAL','Piloto Comercial','PCA',1],
       ['TDC','Tripulante de Cabina','TDC'],
       ['TMA','Técnico de Mantenimiento de Aeronaves','TMA'],
       ['DESPACHADOR','Despachador de Vuelo','DDV'],
@@ -2409,7 +2410,7 @@
       ['CIA','CIA','',1],
       ['AVIONICA','Aviónica','',0],
       ['NEURO ORATORIA','Neuro Oratoria','',0],
-      ['OMA','Organización de Mantenimiento Aeronáutico','OMA'],
+      ['OMA','Organización de Mantenimiento Aeronáutico / Aula Taller','OMA'],
       ['BISTRO','Bistró','',0],
       ['INSTITUCIONAL','Institucional','',1]
     ];
@@ -2423,6 +2424,8 @@
     // Catálogo de cursos para nombrar los álbumes (código de carpeta → nombre completo).
     window.__CURSOS={};
     REG.forEach(function(r){window.__CURSOS[r[0]]={label:r[1],sigla:r[2]||r[0],esp:false};});
+    // Carpetas viejas que dicen solo «PILOTO» (antes de separar Privado y Comercial).
+    if(!window.__CURSOS.PILOTO)window.__CURSOS.PILOTO={label:'Piloto',sigla:'PILOTO',esp:false};
     ESP.forEach(function(g){var padre=/^(TMA|TDC)$/.test(g[0])?g[0]:(g[0]==='Pilotos'?'PILOTO':'');g[1].forEach(function(n){
       var c=n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
       if(!window.__CURSOS[c])window.__CURSOS[c]={label:n,sigla:padre==='PILOTO'?'PILOTO':padre,padre:padre,esp:true};});});
@@ -2448,7 +2451,7 @@
         '<div class="up-lbl">O curso especial</div><select class="up-in up-sel" id="upesp"><option value="">Elige un curso especial…</option>'+ESP.map(function(g){return '<optgroup label="'+g[0]+'">'+g[1].map(function(n){return '<option value="'+esc(codigo(n))+'">'+esc(n)+'</option>';}).join('')+'</optgroup>';}).join('')+'</select>'+
         '<div class="up-lbl">Sede</div><div class="up-chips" id="upsede">'+SEDES.map(function(s){return '<button class="up-chip" data-v="'+s[0]+'">'+s[1]+'</button>';}).join('')+'</div>'+
         '<div class="up-lbl">Fecha de la captura</div><input class="up-in" type="date" id="upfecha">'+
-        '<div class="up-lbl">¿Qué vas a subir?</div><div class="up-chips" id="uptipo"><button class="up-chip on" data-v="general">Material general del curso</button><button class="up-chip" data-v="evento">De un evento o grupo</button><button class="up-chip" data-v="editado">Video editado (pieza terminada)</button><button class="up-chip" data-v="banco">⭐ Banco de fotos (las mejores)</button></div>'+
+        '<div class="up-lbl">¿Qué vas a subir?</div><div class="up-chips" id="uptipo"><button class="up-chip on" data-v="general">Contenido en bruto</button><button class="up-chip" data-v="evento">De un evento o grupo</button><button class="up-chip" data-v="editado">Video editado (pieza terminada)</button><button class="up-chip" data-v="banco">⭐ Banco de fotos (las mejores)</button></div>'+
         '<p class="up-hint" id="uphint">Fotos y videos del curso que no son de una actividad en particular. La carpeta se marca como «general».</p>'+
         '<div class="up-row" id="uprow" style="display:none">'+
           '<div><div class="up-lbl">Grupo <small>opcional</small></div><input class="up-in" id="upgrupo" placeholder="TDC-91-MJ-AB" autocomplete="off" autocapitalize="characters"></div>'+
@@ -2527,7 +2530,7 @@
       [$('upserv'),$('upesp'),$('upfecha')].forEach(function(el){el.classList.add('up-noed');el.previousElementSibling.classList.add('up-noed');});
       ['.up-out','#upwarn','.up-how'].forEach(function(q){var el=body.querySelector(q); if(el)el.classList.add('up-noed');});
     })();
-    var HINT={general:'Fotos y videos del curso que no son de una actividad en particular. La carpeta se marca como «general».',
+    var HINT={general:'Lo que grabaste o fotografiaste del curso, tal cual salió de la cámara o el teléfono, sin editar.',
       evento:'Escribe el grupo y/o qué se estaba haciendo (por ejemplo «práctica de evacuación»).',
       banco:'Solo las mejores fotos del curso (de Google Fotos o de hoy): bien encuadradas, uniforme impecable, sin desorden atrás. Quedan en la pestaña «Banco» para que todos las usen.',
       editado:'Para videos ya terminados. Elige la sede y se abre su carpeta dentro de «Editado»: súbelo ahí directo, sin crear carpetas.'};
@@ -3185,6 +3188,42 @@
       }catch(e){}
       return _r.apply(this,arguments);
     };
+  })();
+
+  // ── v20: el contenido en bruto (material general del curso) no sale en el inicio ──
+  // En el inicio solo eventos (y después Banco y Editados). El bruto tiene su pestaña y sale al buscar o filtrar.
+  (function(){
+    var GEN=/^(general|material(_|\s)?org[aá]nico|org[aá]nico|material|contenido|varios|sin_evento)?$/i;
+    function esBruto(r){
+      var a=String(r.album||'');
+      if(!a||a.indexOf('EDITADOS · ')===0||/banco_de_fotos/i.test(a)||String(r.driveId||'').indexOf('gphotos:')===0)return false;
+      var p=a.split(/\s+-\s+/); if(p.length<4)return false;          // carpetas viejas sin formato: se dejan
+      var ev=String(r.evento||'').split(' / ')[0].trim()||p[p.length-1];
+      return GEN.test(ev.replace(/\s+/g,'_'));
+    }
+    window.__esBruto=esBruto;
+    var soloBruto=false;
+    function enInicio(){
+      if($('q').value.trim())return false;
+      if(['f-servicio','f-sede','f-anio','f-estado','f-tipo','f-tipoevento'].some(function(id){var e=$(id);return e&&e.value;}))return false;
+      if(window.__galAlbum&&window.__galAlbum.actual&&window.__galAlbum.actual())return false;
+      var bb=$('qf-banco'); if(bb&&bb.classList.contains('active'))return false;
+      return true;
+    }
+    var _p=window.passes;
+    window.passes=function(r,skip){
+      if(!_p(r,skip))return false;
+      if(soloBruto)return esBruto(r);
+      if(skip==null&&enInicio()&&esBruto(r))return false;
+      return true;
+    };
+    var ban=$('qf-banco'), b=document.createElement('button');
+    b.className='seg-b'; b.id='qf-bruto'; b.innerHTML=ic('video')+'En bruto'; b.title='Material sin editar de los cursos (no de un evento)';
+    if(ban)ban.parentNode.insertBefore(b,ban);
+    b.onclick=function(){ soloBruto=!soloBruto; apply(); };
+    var _s=window.syncQF; window.syncQF=function(){ _s.apply(this,arguments); b.classList.toggle('active',soloBruto); if(soloBruto)$('qf-all').classList.remove('active'); };
+    ['qf-all','qf-foto','qf-video','qf-edit','qf-fav','qf-banco'].forEach(function(id){var e=$(id);if(e)e.addEventListener('click',function(){if(soloBruto){soloBruto=false;}},true);});
+    var _ca=window.clearAll; window.clearAll=function(){ soloBruto=false; return _ca.apply(this,arguments); };
   })();
 </script>
 
