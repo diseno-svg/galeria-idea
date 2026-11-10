@@ -1078,7 +1078,7 @@
 </style>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611091331';
+  var GAL_VERSION='202611100135';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -3250,6 +3250,50 @@
     var _s=window.syncQF; window.syncQF=function(){ _s.apply(this,arguments); b.classList.toggle('active',soloBruto); if(soloBruto)$('qf-all').classList.remove('active'); };
     ['qf-all','qf-foto','qf-video','qf-edit','qf-fav','qf-banco'].forEach(function(id){var e=$(id);if(e)e.addEventListener('click',function(){if(soloBruto){soloBruto=false;}},true);});
     var _ca=window.clearAll; window.clearAll=function(){ soloBruto=false; return _ca.apply(this,arguments); };
+  })();
+
+  // ── v21: «En vivo» — lo recién subido a Drive aparece al instante, sin esperar al registro ──
+  (function(){
+    var BASE=null, VIVO=[], cargando=false, listo=false;
+    function cargarScript(cb){
+      if(window.GaleriaVivo)return cb();
+      var s=document.createElement('script'); s.src='vivo.js?v='+Date.now(); s.onload=cb; s.onerror=function(){};
+      document.head.appendChild(s);
+    }
+    var _od=window.onData;
+    window.onData=function(rows){
+      BASE=rows||[];
+      var ya={}; BASE.forEach(function(r){if(r.driveId)ya[r.driveId]=1;});
+      var extra=VIVO.filter(function(r){return !ya[r.driveId];});
+      return _od.call(this,extra.length?BASE.concat(extra):BASE);
+    };
+    var chip=document.createElement('button'); chip.className='vivo-chip'; chip.type='button';
+    chip.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top));z-index:60;display:none;'+
+      'padding:10px 18px;border-radius:999px;border:0;background:#FCB72D;color:#000;font:700 14px var(--font);box-shadow:0 10px 30px rgba(0,0,0,.25);cursor:pointer';
+    document.body.appendChild(chip);
+    function mostrar(){ if(BASE)window.onData(BASE); chip.style.display='none'; }
+    chip.onclick=function(){ mostrar(); window.scrollTo({top:0,behavior:'smooth'}); };
+    function revisar(primera){
+      if(cargando||!BASE)return; cargando=true;
+      cargarScript(function(){
+        if(!window.GaleriaVivo){cargando=false;return;}
+        window.GaleriaVivo.cargar().then(function(rows){
+          var antes={}; VIVO.forEach(function(r){antes[r.driveId]=1;});
+          var ya={}; BASE.forEach(function(r){if(r.driveId&&!r._vivo)ya[r.driveId]=1;});
+          var nuevos=rows.filter(function(r){return !ya[r.driveId]&&!antes[r.driveId];}).length;
+          VIVO=rows; listo=true;
+          if(!nuevos)return;
+          var ocupado=document.body.classList.contains('noscroll')||document.querySelector('.sheet.open');
+          if(primera||(!ocupado&&window.scrollY<300)){ mostrar(); if(!primera&&window.toast)toast(nuevos+(nuevos===1?' archivo nuevo':' archivos nuevos')+' en la galería'); }
+          else { chip.textContent='↑ '+nuevos+(nuevos===1?' archivo nuevo':' archivos nuevos')+' · Ver'; chip.style.display='block'; }
+        }).catch(function(){}).then(function(){cargando=false;});
+      });
+    }
+    // Al abrir, al volver a la pestaña (p. ej. después de subir en Drive) y cada 2 minutos mientras se ve.
+    var t0=setInterval(function(){ if(BASE){clearInterval(t0); revisar(true);} },500);
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden)setTimeout(function(){revisar(false);},800); });
+    window.addEventListener('focus',function(){ revisar(false); });
+    setInterval(function(){ if(!document.hidden)revisar(false); },120000);
   })();
 </script>
 

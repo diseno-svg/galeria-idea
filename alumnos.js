@@ -46,7 +46,19 @@
   }
   function fecha(a){var m=String(a).match(/(20\d{2})-(\d{2})-(\d{2})/);return m?(+m[3])+' de '+MESES[+m[2]-1]+' de '+m[1]:'';}
 
-  obtener().then(function(d){
+  // Si el álbum se subió hace poco y todavía no está en el catálogo, se busca directo en Drive.
+  var vivoProbado=false;
+  function buscarVivo(d){
+    var sc=document.createElement('script'); sc.src='vivo.js?v='+Date.now();
+    sc.onload=function(){ window.GaleriaVivo.cargar().then(function(rows){ procesar({contenido:(d.contenido||[]).concat(rows)}); })
+      .catch(function(){ procesar(d); }); };
+    sc.onerror=function(){ procesar(d); };
+    document.head.appendChild(sc);
+  }
+  obtener().then(procesar).catch(function(){
+    falla('No se pudo cargar','Revisa tu conexión e intenta de nuevo en unos minutos.');
+  });
+  function procesar(d){
     var porAlbum={};
     (d.contenido||[]).forEach(function(r){
       if(!r||!r.driveId||String(r.driveId).indexOf('gphotos:')===0||!r.album)return;
@@ -58,14 +70,13 @@
     });
     var alb=null;
     Object.keys(porAlbum).some(function(a){if(codigo(a)===token){alb=a;return true;}return false;});
+    if(!alb&&!vivoProbado){ vivoProbado=true; return buscarVivo(d); }
     if(!alb){ falla('Enlace no disponible','Este álbum ya no está disponible o el enlace está incompleto. Pídele a IDEA uno nuevo.'); return; }
     // Solo queda en memoria el álbum de este enlace.
     ITEMS=porAlbum[alb]; porAlbum=null; d=null;
     ITEMS.sort(function(x,y){return String(x.nombre||'').localeCompare(String(y.nombre||''),'es',{numeric:true});});
     pintar(alb);
-  }).catch(function(){
-    falla('No se pudo cargar','Revisa tu conexión e intenta de nuevo en unos minutos.');
-  });
+  }
 
   function pintar(alb){
     var r0=ITEMS[0], t=titulo(alb,r0), f=fecha(alb);
