@@ -1117,7 +1117,7 @@
 </style>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611200213';
+  var GAL_VERSION='202611200217';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -3138,8 +3138,8 @@
           if(r.persona3)pp.push('<b>'+esc(r.persona3)+'</b> <small>extra</small>');
           h+=r.persona2?('<div class="itin-it '+est+'"><div class="cu">'+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
             (r.que?'<div class="q">'+esc(r.que)+'</div>':'')+(pp.length?'<div class="pp">'+pp.join('<br>')+'</div>':'')+'</div>')
-            :('<div class="itin-it '+est+(r.formato1==='Curso especial'?' esp':'')+'">'+(r.formato1==='Curso especial'?'<div class="tagesp">⭐ Curso especial</div>':'')+'<div class="cu">'+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
-            '<div class="q"><b>'+esc(r.sede1||'')+'</b></div><div class="pp"><b>'+esc(r.persona1||'')+'</b></div>'+
+            :('<div class="itin-it '+est+(r.formato1==='Curso especial'?' esp':'')+'">'+'<div class="cu">'+(r.formato1==='Curso especial'?'⭐ ':'')+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
+            (r.sede1?'<div class="q"><b>'+esc(r.sede1)+'</b></div>':'')+'<div class="pp"><b>'+esc(r.persona1||'')+'</b></div>'+
             (r.que?'<div class="q" style="opacity:.7;font-size:11.5px;margin-top:4px">'+esc(r.que)+'</div>':'')+'</div>');
         });
         var wk=''; if(i%7===0){var e6=new Date(d); e6.setDate(e6.getDate()+6); wk=d.getDate()+' '+MES[d.getMonth()]+' – '+e6.getDate()+' '+MES[e6.getMonth()];}
