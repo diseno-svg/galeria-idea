@@ -1075,10 +1075,22 @@
   .itin-none{margin-top:14px;text-align:center;color:#fff;background:rgba(255,255,255,.1);border:1px dashed rgba(255,255,255,.35);border-radius:16px;padding:18px;font-size:14px}
   /* ── v18: Banco de fotos ── */
   .seg-b#qf-banco.active{background:var(--gold);color:#000}
+  /* ── v22: eventos del mes ── */
+  .ev-box{margin-top:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:14px}
+  .ev-h h3{font-size:16px;font-weight:800;color:#fff;margin:0 0 10px}
+  .ev-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+  .ev-it{display:flex;gap:12px;background:#fff;color:#0A1E3D;border-radius:12px;padding:10px 12px;border-left:4px solid var(--gold)}
+  .ev-it.pas{opacity:.6}.ev-it.hoy{box-shadow:0 0 0 2px var(--gold)}
+  .ev-f{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:42px;border-radius:10px;background:#01275C;color:#fff;padding:4px}
+  .ev-f b{font-size:18px;line-height:1}.ev-f small{font-size:10.5px;text-transform:uppercase;color:#FCB72D;font-weight:700}
+  .ev-n{font-weight:800;font-size:13.5px}.ev-m{font-size:12px;color:#334155;margin-top:2px}.ev-o{font-size:11.5px;color:#5A7395;margin-top:3px}
+  .ev-nota{margin-top:10px;font-size:12.5px;color:#E3F0FB}
+  .itin-it .pp small{display:none}
+  .itin-it.ev{border-left-color:var(--gold);background:#fff8e6}.itin-it.ev .st{background:var(--gold);color:#000}
 </style>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611100135';
+  var GAL_VERSION='202611200112';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -3088,11 +3100,14 @@
         var d=new Date(base); d.setDate(d.getDate()+i); var f=iso(d);
         var its=sem.filter(function(r){return r.fecha.slice(0,10)===f;});
         var h='';
+        (EVENTOS||[]).filter(function(e){return e.fecha===f;}).forEach(function(e){
+          h+='<div class="itin-it ev"><div class="cu">📍 '+esc(e.titulo||'Evento')+'<span class="st">Evento</span></div><div class="q">'+esc((e.curso?e.curso+' · ':'')+(e.sede||''))+'</div>'+(e.responsable?'<div class="pp">Cubre: <b>'+esc(e.responsable)+'</b></div>':'')+'</div>';
+        });
         its.forEach(function(r){
-          var est=subido(r)?'ok':(f<hoy?'pe':(f===hoy?'pr':'pr'));
+          var est=subido(r)?'ok':(f<hoy?(DESDE&&f<DESDE?'pr':'pe'):'pr');
           if(est==='ok')nOk++; else if(est==='pe')nPe++; else nPr++;
-          var lab={ok:'✓ Subido',pe:'Pendiente',pr:(f===hoy?'Hoy':'Programado')}[est];
-          var pp=[]; if(r.persona1)pp.push('<b>'+esc(r.persona1)+'</b>'+(r.formato1?' · '+esc(r.formato1):'')+' <small>AM</small>');
+          var lab={ok:'✓ Subido',pe:'Pendiente',pr:(f===hoy?'Hoy':(f<hoy?'—':'Programado'))}[est];
+          var pp=[]; if(r.persona1)pp.push('<b>'+esc(r.persona1)+'</b>'+(r.sede1?' · '+esc(r.sede1):'')+(r.formato1?' · '+esc(r.formato1):'')+' <small>AM</small>');
           if(r.persona2)pp.push('<b>'+esc(r.persona2)+'</b>'+(r.formato2?' · '+esc(r.formato2):'')+' <small>PM</small>');
           if(r.persona3)pp.push('<b>'+esc(r.persona3)+'</b> <small>extra</small>');
           h+='<div class="itin-it '+est+'"><div class="cu">'+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
@@ -3110,7 +3125,28 @@
         sec.innerHTML=cab+'<div class="itin-sum">'+(nOk?'<span class="ok">✓ '+nOk+' subido'+(nOk>1?'s':'')+'</span>':'')+(nPe?'<span class="pe">'+nPe+' pendiente'+(nPe>1?'s':'')+'</span>':'')+(nPr?'<span>'+nPr+' por grabar</span>':'')+'</div><div class="itin-days">'+dias+'</div>';
         var t=sec.querySelector('.itin-day.today'); if(t&&window.matchMedia('(max-width:1000px)').matches){var box=sec.querySelector('.itin-days');box.scrollLeft=t.offsetLeft-box.offsetLeft-16;}
       }
+      sec.insertAdjacentHTML('beforeend',eventosHtml());
       sec.style.display='';
+    }
+    var MESES_L=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    function eventosHtml(){
+      var y=base.getFullYear(), m=base.getMonth(), pref=y+'-'+String(m+1).padStart(2,'0');
+      var fin=new Date(base); fin.setDate(fin.getDate()+6); var pref2=fin.getFullYear()+'-'+String(fin.getMonth()+1).padStart(2,'0');
+      var lista=(EVENTOS||[]).filter(function(e){var f=String(e.fecha||'');return f.indexOf(pref)===0||f.indexOf(pref2)===0;})
+        .sort(function(a,b){return a.fecha<b.fecha?-1:1;});
+      var hoy=iso(new Date());
+      var h='<div class="ev-box"><div class="ev-h"><h3>Eventos de '+MESES_L[m]+(pref2!==pref?' y '+MESES_L[fin.getMonth()]:'')+'</h3></div>';
+      if(lista.length){
+        h+='<div class="ev-list">'+lista.map(function(e){
+          var dd=new Date(e.fecha+'T12:00:00'), pas=e.fecha<hoy;
+          return '<div class="ev-it'+(pas?' pas':'')+(e.fecha===hoy?' hoy':'')+'"><div class="ev-f"><b>'+dd.getDate()+'</b><small>'+MES[dd.getMonth()]+'</small></div>'+
+            '<div class="ev-t"><div class="ev-n">'+esc(e.titulo||'Evento')+(e.curso?' · '+esc(e.curso):'')+'</div>'+
+            '<div class="ev-m">'+esc(e.sede||'')+(e.responsable?' · Cubre: <b>'+esc(e.responsable)+'</b>':'')+'</div>'+
+            (e.nota?'<div class="ev-o">'+esc(e.nota)+'</div>':'')+'</div></div>';
+        }).join('')+'</div>';
+      } else h+='<div class="itin-empty">No hay eventos cargados para este mes.</div>';
+      h+='<div class="ev-nota">📣 '+esc(NOTA_EV||'El coordinador avisa a cada publicista cuándo le toca cubrir un evento.')+'</div></div>';
+      return h;
     }
     sec.addEventListener('click',function(e){
       var b=e.target.closest('[data-w]'); if(!b)return;
@@ -3121,12 +3157,15 @@
     function sync(){var h=$('hero');sec.classList.toggle('off',!!(h&&h.classList.contains('off')));}
     var _uh=window.updateHero; window.updateHero=function(){_uh.apply(this,arguments);sync();};
     // Respaldo: si el catálogo todavía no trae fechas en el calendario, se lee itinerario.json (copia de la tabla 10.5).
-    var EXTRA=null;
+    var EXTRA=null, EVENTOS=[], NOTA_EV='', DESDE='';
     function conFecha(){return (CAL||[]).some(function(r){return /^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');});}
+    // itinerario.json (rotación mensual + eventos) manda sobre lo que traiga el catálogo.
     function respaldo(){
-      if(EXTRA||conFecha())return;
+      if(EXTRA)return;
       fetch('itinerario.json?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
-        EXTRA=(d&&d.itinerario)||[]; if(!conFecha()&&EXTRA.length){CAL=(CAL||[]).concat(EXTRA);} pintar(); sync();
+        EXTRA=(d&&d.itinerario)||[]; EVENTOS=(d&&d.eventos)||[]; NOTA_EV=(d&&d.nota_eventos)||''; DESDE=(d&&d.desde)||'';
+        if(EXTRA.length)CAL=(CAL||[]).filter(function(r){return !/^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');}).concat(EXTRA);
+        pintar(); sync();
       }).catch(function(){});
     }
     var _od=window.onData; window.onData=function(){var r=_od.apply(this,arguments);try{pintar();sync();respaldo();}catch(e){}return r;};
