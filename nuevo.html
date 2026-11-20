@@ -1090,7 +1090,7 @@
 </style>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611200112';
+  var GAL_VERSION='202611200133';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -3107,14 +3107,14 @@
           var est=subido(r)?'ok':(f<hoy?(DESDE&&f<DESDE?'pr':'pe'):'pr');
           if(est==='ok')nOk++; else if(est==='pe')nPe++; else nPr++;
           var lab={ok:'✓ Subido',pe:'Pendiente',pr:(f===hoy?'Hoy':(f<hoy?'—':'Programado'))}[est];
-          var pp=[]; if(r.persona1)pp.push('<b>'+esc(r.persona1)+'</b>'+(r.sede1?' · '+esc(r.sede1):'')+(r.formato1?' · '+esc(r.formato1):'')+' <small>AM</small>');
+          var pp=[]; if(r.persona1)pp.push('<b>'+esc(r.persona1)+'</b>'+(r.sede1?' · '+esc(r.sede1):'')+(r.formato1?' · '+esc(r.formato1):'')+(r.persona2?' <small>AM</small>':''));
           if(r.persona2)pp.push('<b>'+esc(r.persona2)+'</b>'+(r.formato2?' · '+esc(r.formato2):'')+' <small>PM</small>');
           if(r.persona3)pp.push('<b>'+esc(r.persona3)+'</b> <small>extra</small>');
           h+='<div class="itin-it '+est+'"><div class="cu">'+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
             (r.que?'<div class="q">'+esc(r.que)+'</div>':'')+(pp.length?'<div class="pp">'+pp.join('<br>')+'</div>':'')+'</div>';
         });
         dias+='<div class="itin-day'+(f===hoy?' today':'')+'"><div class="dh"><b>'+DIAS[i]+'</b><small>'+(f===hoy?'Hoy · ':'')+d.getDate()+' '+MES[d.getMonth()]+'</small></div>'+
-          (h||'<div class="itin-empty">Sin asignaciones</div>')+'</div>';
+          (h||'<div class="itin-empty">'+(i===6?'Solo historias':'Sin asignaciones')+'</div>')+'</div>';
       }
       var rango=base.getDate()+' '+MES[base.getMonth()]+' – '+fin.getDate()+' '+MES[fin.getMonth()];
       var cab='<div class="itin-h"><h2>Itinerario de los publicistas</h2><span class="wk">Semana del '+rango+'</span>'+
@@ -3164,8 +3164,34 @@
       if(EXTRA)return;
       fetch('itinerario.json?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
         EXTRA=(d&&d.itinerario)||[]; EVENTOS=(d&&d.eventos)||[]; NOTA_EV=(d&&d.nota_eventos)||''; DESDE=(d&&d.desde)||'';
+        RESP=(d&&d.responsables)||{};
         if(EXTRA.length)CAL=(CAL||[]).filter(function(r){return !/^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');}).concat(EXTRA);
-        pintar(); sync();
+        // Si esta semana todavía no tiene itinerario, se abre en la semana en que empieza.
+        if(DESDE&&iso(base)<iso(lunes(new Date(DESDE+'T12:00:00')))&&!EXTRA.some(function(r){var f=String(r.fecha);return f>=iso(base)&&f<=iso(new Date(base.getTime()+6*864e5));}))base=lunes(new Date(DESDE+'T12:00:00'));
+        pintar(); sync(); enVivo();
+      }).catch(function(){});
+    }
+    // Eventos en vivo: el mismo Calendario de Eventos de la Base de Conocimiento (aeroidea.net/soporte2).
+    // Lo que trae itinerario.json (quién cubre, notas) se cruza por fecha + sede + tipo de evento.
+    var CAL_EV='https://idea-calendario.soporte-23f.workers.dev', RESP={};
+    var FUERA=/pago|reparaci|evento privado/i;
+    function nrm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+    function enVivo(){
+      fetch(CAL_EV,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+        var vivos=[], vistos={};
+        (d&&d.eventos||[]).forEach(function(e){
+          if(!e.fecha||FUERA.test(e.categoria||''))return;
+          var sede=String(e.titulo||'').split(' - ').slice(1).join(' - ').trim(), cat=e.categoria||String(e.titulo||'').split(' - ')[0];
+          var k=e.fecha+'|'+nrm(sede)+'|'+nrm(cat); if(vistos[k])return; vistos[k]=1;
+          var cursos=[]; (e.grupos||[]).forEach(function(g){var c=String(g).split('-')[0];if(c&&cursos.indexOf(c)<0)cursos.push(c);});
+          var man=EVENTOS.filter(function(x){return x.fecha===e.fecha&&nrm(x.sede)===nrm(sede)&&nrm(x.titulo).indexOf(nrm(cat).slice(0,8))===0;})[0]||{};
+          vivos.push({fecha:e.fecha,titulo:cat,sede:sede,curso:man.curso||cursos.join(' · '),
+            responsable:man.responsable||RESP[sede]||'',nota:man.nota||((e.grupos||[]).length?(e.grupos.length+' grupo'+(e.grupos.length>1?'s':'')):''),_vivo:1});
+        });
+        if(!vivos.length)return;
+        // Se conservan los eventos cargados a mano que el calendario oficial no trae (p. ej. una suplencia).
+        EVENTOS.forEach(function(x){if(!vivos.some(function(v){return v.fecha===x.fecha&&nrm(v.sede)===nrm(x.sede)&&nrm(v.titulo).slice(0,8)===nrm(x.titulo).slice(0,8);}))vivos.push(x);});
+        EVENTOS=vivos; pintar(); sync();
       }).catch(function(){});
     }
     var _od=window.onData; window.onData=function(){var r=_od.apply(this,arguments);try{pintar();sync();respaldo();}catch(e){}return r;};
