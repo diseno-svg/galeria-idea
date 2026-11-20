@@ -21,7 +21,7 @@
   {
    "fecha": "2026-11-24",
    "dia": "Martes",
-   "servicio": "TMA",
+   "servicio": "Inglés",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -51,7 +51,7 @@
   {
    "fecha": "2026-11-26",
    "dia": "Jueves",
-   "servicio": "Inglés",
+   "servicio": "Aviónica",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -111,7 +111,7 @@
   {
    "fecha": "2026-12-01",
    "dia": "Martes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -126,7 +126,7 @@
   {
    "fecha": "2026-12-02",
    "dia": "Miércoles",
-   "servicio": "Aviónica",
+   "servicio": "Aula Taller (OMA)",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -156,7 +156,7 @@
   {
    "fecha": "2026-12-04",
    "dia": "Viernes",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -186,7 +186,7 @@
   {
    "fecha": "2026-12-07",
    "dia": "Lunes",
-   "servicio": "Inglés",
+   "servicio": "TDC",
    "persona1": "María Leal",
    "sede1": "San Cristóbal",
    "formato1": "",
@@ -201,7 +201,7 @@
   {
    "fecha": "2026-12-08",
    "dia": "Martes",
-   "servicio": "TMA",
+   "servicio": "Inglés",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -231,7 +231,7 @@
   {
    "fecha": "2026-12-10",
    "dia": "Jueves",
-   "servicio": "Aula Taller (OMA)",
+   "servicio": "RPA",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -246,7 +246,7 @@
   {
    "fecha": "2026-12-11",
    "dia": "Viernes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -276,7 +276,7 @@
   {
    "fecha": "2026-12-14",
    "dia": "Lunes",
-   "servicio": "TDC",
+   "servicio": "Inglés",
    "persona1": "María Leal",
    "sede1": "San Cristóbal",
    "formato1": "",
@@ -291,7 +291,7 @@
   {
    "fecha": "2026-12-15",
    "dia": "Martes",
-   "servicio": "Inglés",
+   "servicio": "TMA",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -321,7 +321,7 @@
   {
    "fecha": "2026-12-17",
    "dia": "Jueves",
-   "servicio": "RPA",
+   "servicio": "Aviónica",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -336,7 +336,7 @@
   {
    "fecha": "2026-12-18",
    "dia": "Viernes",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -366,7 +366,7 @@
   {
    "fecha": "2026-12-21",
    "dia": "Lunes",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -381,7 +381,7 @@
   {
    "fecha": "2026-12-22",
    "dia": "Martes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -426,7 +426,7 @@
   {
    "fecha": "2026-12-28",
    "dia": "Lunes",
-   "servicio": "Inglés",
+   "servicio": "TDC",
    "persona1": "María Leal",
    "sede1": "San Cristóbal",
    "formato1": "",
@@ -441,7 +441,7 @@
   {
    "fecha": "2026-12-29",
    "dia": "Martes",
-   "servicio": "TDC",
+   "servicio": "Inglés",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
