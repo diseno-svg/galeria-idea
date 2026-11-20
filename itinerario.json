@@ -21,7 +21,7 @@
   {
    "fecha": "2026-11-24",
    "dia": "Martes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -51,7 +51,7 @@
   {
    "fecha": "2026-11-26",
    "dia": "Jueves",
-   "servicio": "TDC",
+   "servicio": "Inglés",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -66,7 +66,7 @@
   {
    "fecha": "2026-11-27",
    "dia": "Viernes",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -126,7 +126,7 @@
   {
    "fecha": "2026-12-02",
    "dia": "Miércoles",
-   "servicio": "PPA",
+   "servicio": "TDC",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -141,7 +141,7 @@
   {
    "fecha": "2026-12-03",
    "dia": "Jueves",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Ashley Carucci",
    "sede1": "Caracas",
    "formato1": "",
@@ -156,7 +156,7 @@
   {
    "fecha": "2026-12-04",
    "dia": "Viernes",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -201,7 +201,7 @@
   {
    "fecha": "2026-12-08",
    "dia": "Martes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -216,7 +216,7 @@
   {
    "fecha": "2026-12-09",
    "dia": "Miércoles",
-   "servicio": "TMA",
+   "servicio": "PPA",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -231,7 +231,7 @@
   {
    "fecha": "2026-12-10",
    "dia": "Jueves",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Ashley Carucci",
    "sede1": "Caracas",
    "formato1": "",
@@ -246,7 +246,7 @@
   {
    "fecha": "2026-12-11",
    "dia": "Viernes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -291,7 +291,7 @@
   {
    "fecha": "2026-12-15",
    "dia": "Martes",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -306,7 +306,7 @@
   {
    "fecha": "2026-12-16",
    "dia": "Miércoles",
-   "servicio": "Inglés",
+   "servicio": "TMA",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -336,7 +336,7 @@
   {
    "fecha": "2026-12-18",
    "dia": "Viernes",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Ibrahim",
    "sede1": "Barquisimeto",
    "formato1": "",
@@ -366,7 +366,7 @@
   {
    "fecha": "2026-12-21",
    "dia": "Lunes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Ashley Carucci",
    "sede1": "Caracas",
    "formato1": "",
@@ -426,7 +426,7 @@
   {
    "fecha": "2026-12-28",
    "dia": "Lunes",
-   "servicio": "TDC",
+   "servicio": "TMA",
    "persona1": "Michel Marín",
    "sede1": "Valencia",
    "formato1": "",
@@ -441,7 +441,7 @@
   {
    "fecha": "2026-12-29",
    "dia": "Martes",
-   "servicio": "TDC",
+   "servicio": "PPA",
    "persona1": "Aaron Vargas",
    "sede1": "Maracaibo",
    "formato1": "",
@@ -456,7 +456,7 @@
   {
    "fecha": "2026-12-30",
    "dia": "Miércoles",
-   "servicio": "TMA",
+   "servicio": "TDC",
    "persona1": "Ashley Carucci",
    "sede1": "Caracas",
    "formato1": "",
@@ -474,113 +474,97 @@
    "fecha": "2026-11-10",
    "titulo": "Servicio abordo",
    "sede": "Barquisimeto",
-   "nota": "1 grupo",
-   "responsable": "Ibrahim"
+   "nota": "1 grupo"
   },
   {
    "fecha": "2026-11-10",
    "titulo": "Supervivencia",
    "sede": "Maracaibo",
-   "nota": "2 grupos",
-   "responsable": "Aaron Vargas"
+   "nota": "2 grupos"
   },
   {
    "fecha": "2026-11-11",
    "titulo": "Servicio abordo",
    "sede": "San Cristóbal",
-   "nota": "1 grupo",
-   "responsable": "María Leal"
+   "nota": "1 grupo"
   },
   {
    "fecha": "2026-11-11",
    "titulo": "Open Day",
    "sede": "San Cristóbal",
-   "nota": "2 grupos",
-   "responsable": "María Leal"
+   "nota": "2 grupos"
   },
   {
    "fecha": "2026-11-11",
    "titulo": "Supervivencia",
    "sede": "Maracaibo",
-   "nota": "2 grupos",
-   "responsable": "Aaron Vargas"
+   "nota": "2 grupos"
   },
   {
    "fecha": "2026-11-16",
    "titulo": "Supervivencia",
    "sede": "Barquisimeto",
-   "nota": "4 grupos",
-   "responsable": "Ibrahim"
+   "nota": "4 grupos"
   },
   {
    "fecha": "2026-11-17",
    "titulo": "Supervivencia",
    "sede": "Barquisimeto",
-   "nota": "2 grupos",
-   "responsable": "Ibrahim"
+   "nota": "2 grupos"
   },
   {
    "fecha": "2026-11-19",
    "titulo": "Supervivencia",
    "sede": "Barquisimeto",
-   "nota": "2 grupos",
-   "responsable": "Ibrahim"
+   "nota": "2 grupos"
   },
   {
    "fecha": "2026-11-20",
    "titulo": "Supervivencia",
    "sede": "Barquisimeto",
-   "nota": "2 grupos",
-   "responsable": "Ibrahim"
+   "nota": "2 grupos"
   },
   {
    "fecha": "2026-11-23",
    "titulo": "Misa",
    "sede": "Maracaibo",
-   "nota": "11 grupos",
-   "responsable": "Aaron Vargas"
+   "nota": "11 grupos"
   },
   {
    "fecha": "2026-11-24",
    "titulo": "Firma de acto",
    "sede": "Maracaibo",
-   "nota": "11 grupos",
-   "responsable": "Aaron Vargas"
+   "nota": "11 grupos"
   },
   {
    "fecha": "2026-11-25",
    "titulo": "Acto de Grado",
    "sede": "Maracaibo",
-   "nota": "11 grupos",
-   "responsable": "Aaron Vargas"
+   "nota": "11 grupos"
   },
   {
    "fecha": "2026-11-26",
    "titulo": "Open Day",
    "sede": "Margarita",
-   "nota": "1 grupo",
-   "responsable": "Sin publicista · cubre la CCO"
+   "nota": "1 grupo"
   },
   {
    "fecha": "2026-12-03",
    "titulo": "Misa",
    "sede": "Barquisimeto",
-   "nota": "4 grupos",
-   "responsable": "Ibrahim"
+   "nota": "4 grupos"
   },
   {
    "fecha": "2026-12-04",
    "titulo": "Firma de acto",
    "sede": "Barquisimeto",
-   "nota": "4 grupos",
-   "responsable": "Ibrahim"
+   "nota": "4 grupos"
   },
   {
    "fecha": "2026-12-05",
    "titulo": "Acto de Grado",
    "sede": "Barquisimeto",
-   "nota": "6 grupos",
-   "responsable": "Ibrahim"
+   "nota": "6 grupos"
   }
  ],
  "desde": "2026-11-23",
