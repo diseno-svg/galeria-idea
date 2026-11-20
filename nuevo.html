@@ -1108,7 +1108,7 @@
 </style>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611200141';
+  var GAL_VERSION='202611200144';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -3150,7 +3150,7 @@
     // Calendario de eventos del mes, igual que en el panel 1015: «Tipo · SEDE» por día, con color por tipo.
     var EVMES=null, EVSEL='';
     var SIG={'Barquisimeto':'BAR','Caracas':'CAR','Maracaibo':'MAR','San Cristóbal':'SAN','Valencia':'VAL','Margarita':'MGT','Charallave':'CHA'};
-    function corto(t){t=String(t||'');return t.replace(/^Supervivencia.*/i,'Superv.').replace(/^Servicio a bordo/i,'Serv. bordo').replace(/^Firma de acto/i,'Firma').replace(/^Ensayo de acto/i,'Ensayo').replace(/^Acto de grado/i,'Acto');}
+    function corto(t){t=String(t||'');return t.replace(/^Supervivencia.*/i,'Superv.').replace(/^Servicio a ?bordo/i,'Serv. bordo').replace(/^Firma de acto/i,'Firma').replace(/^Ensayo de acto/i,'Ensayo').replace(/^Acto de grado/i,'Acto');}
     function clase(e){var t=nrm(e.titulo);if(e.responsable&&!/^(ibrahim|ashley|michel|maria|aaron|salomon)/.test(nrm(e.responsable))&&!/sin publicista/.test(nrm(e.responsable)))return 'e-yo';
       return /superv/.test(t)?'e-sup':/bordo/.test(t)?'e-bor':/open/.test(t)?'e-ope':/misa/.test(t)?'e-mis':/firma|ensayo/.test(t)?'e-fir':/acto/.test(t)?'e-act':'e-otr';}
     function eventosHtml(){
@@ -3200,20 +3200,23 @@
         if(EXTRA.length)CAL=(CAL||[]).filter(function(r){return !/^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');}).concat(EXTRA);
         // Si esta semana todavía no tiene itinerario, se abre en la semana en que empieza.
         if(DESDE&&iso(base)<iso(lunes(new Date(DESDE+'T12:00:00')))&&!EXTRA.some(function(r){var f=String(r.fecha);return f>=iso(base)&&f<=iso(new Date(base.getTime()+6*864e5));}))base=lunes(new Date(DESDE+'T12:00:00'));
-        pintar(); sync();
+        pintar(); sync(); enVivo();
       }).catch(function(){});
     }
     // Eventos en vivo: el mismo Calendario de Eventos de la Base de Conocimiento (aeroidea.net/soporte2).
     // Lo que trae itinerario.json (quién cubre, notas) se cruza por fecha + sede + tipo de evento.
     var CAL_EV='https://idea-calendario.soporte-23f.workers.dev', RESP={};
-    var FUERA=/pago|reparaci|evento privado/i;
+    // Solo lo que se graba: supervivencia, acto de grado, misa, firma de acto, open day y servicio a bordo.
+    var SI=/^(supervivencia|acto de grado|misa|firma de acto|open day|servicio a ?bordo)$/i;
+    var SEDE_OK={'san cristobal':'San Cristóbal'};
     function nrm(t){return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
     function enVivo(){
       fetch(CAL_EV,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
         var vivos=[], vistos={};
         (d&&d.eventos||[]).forEach(function(e){
-          if(!e.fecha||FUERA.test(e.categoria||''))return;
-          var sede=String(e.titulo||'').split(' - ').slice(1).join(' - ').trim(), cat=e.categoria||String(e.titulo||'').split(' - ')[0];
+          var cat=String(e.categoria||String(e.titulo||'').split(' - ')[0]).trim();
+          if(!e.fecha||!SI.test(cat))return;
+          var sede=String(e.titulo||'').split(' - ').slice(1).join(' - ').trim(); sede=SEDE_OK[nrm(sede)]||sede;
           var k=e.fecha+'|'+nrm(sede)+'|'+nrm(cat); if(vistos[k])return; vistos[k]=1;
           var cursos=[]; (e.grupos||[]).forEach(function(g){var c=String(g).split('-')[0];if(c&&cursos.indexOf(c)<0)cursos.push(c);});
           var man=EVENTOS.filter(function(x){return x.fecha===e.fecha&&nrm(x.sede)===nrm(sede)&&nrm(x.titulo).indexOf(nrm(cat).slice(0,8))===0;})[0]||{};
@@ -3221,8 +3224,6 @@
             responsable:man.responsable||RESP[sede]||'',nota:man.nota||((e.grupos||[]).length?(e.grupos.length+' grupo'+(e.grupos.length>1?'s':'')):''),_vivo:1});
         });
         if(!vivos.length)return;
-        // Se conservan los eventos cargados a mano que el calendario oficial no trae (p. ej. una suplencia).
-        EVENTOS.forEach(function(x){if(!vivos.some(function(v){return v.fecha===x.fecha&&nrm(v.sede)===nrm(x.sede)&&nrm(v.titulo).slice(0,8)===nrm(x.titulo).slice(0,8);}))vivos.push(x);});
         EVENTOS=vivos; pintar(); sync();
       }).catch(function(){});
     }
