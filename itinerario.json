@@ -7,15 +7,15 @@
    "fecha": "2026-11-23",
    "dia": "Lunes",
    "servicio": "TDC",
-   "persona1": "María Leal",
-   "sede1": "San Cristóbal",
+   "persona1": "Aaron Vargas",
+   "sede1": "Maracaibo",
    "formato1": "",
    "persona2": "",
    "sede2": "",
    "formato2": "",
    "persona3": "",
    "sede3": "",
-   "que": "Reel del curso (clase o taller en acción)",
+   "que": "Entrevista corta a un alumno",
    "plataformas": "Instagram"
   },
   {
@@ -36,6 +36,21 @@
   {
    "fecha": "2026-11-25",
    "dia": "Miércoles",
+   "servicio": "TDC",
+   "persona1": "María Leal",
+   "sede1": "San Cristóbal",
+   "formato1": "",
+   "persona2": "",
+   "sede2": "",
+   "formato2": "",
+   "persona3": "",
+   "sede3": "",
+   "que": "Reel del curso (clase o taller en acción)",
+   "plataformas": "Instagram"
+  },
+  {
+   "fecha": "2026-11-26",
+   "dia": "Jueves",
    "servicio": "PPA",
    "persona1": "Ashley Carucci",
    "sede1": "Caracas",
@@ -46,21 +61,6 @@
    "persona3": "",
    "sede3": "",
    "que": "Detrás de cámaras / día en IDEA",
-   "plataformas": "Instagram"
-  },
-  {
-   "fecha": "2026-11-26",
-   "dia": "Jueves",
-   "servicio": "TDC",
-   "persona1": "Aaron Vargas",
-   "sede1": "Maracaibo",
-   "formato1": "",
-   "persona2": "",
-   "sede2": "",
-   "formato2": "",
-   "persona3": "",
-   "sede3": "",
-   "que": "Entrevista corta a un alumno",
    "plataformas": "Instagram"
   },
   {
@@ -471,122 +471,210 @@
  ],
  "eventos": [
   {
+   "fecha": "2026-10-24",
+   "titulo": "Servicio a bordo",
+   "sede": "Barquisimeto",
+   "grupos": "TDC-92-MJ-CD",
+   "responsable": "Ibrahim"
+  },
+  {
+   "fecha": "2026-10-24",
+   "titulo": "Primeros auxilios",
+   "sede": "Margarita",
+   "grupos": "TDC-92-LMV-C.1, TDC-92-LMV-C.2",
+   "responsable": "Sin publicista · cubre la CCO"
+  },
+  {
+   "fecha": "2026-10-28",
+   "titulo": "Ensayo de acto",
+   "sede": "Caracas",
+   "grupos": "9 grupos",
+   "responsable": "Ashley Carucci"
+  },
+  {
+   "fecha": "2026-10-28",
+   "titulo": "Firma de acto",
+   "sede": "Caracas",
+   "grupos": "9 grupos",
+   "responsable": "Ashley Carucci"
+  },
+  {
+   "fecha": "2026-10-28",
+   "titulo": "Misa",
+   "sede": "Caracas",
+   "grupos": "9 grupos",
+   "responsable": "Ashley Carucci"
+  },
+  {
+   "fecha": "2026-10-29",
+   "titulo": "Servicio a bordo",
+   "sede": "Barquisimeto",
+   "grupos": "TDC-92-S-ABCD",
+   "responsable": "Ibrahim"
+  },
+  {
+   "fecha": "2026-10-29",
+   "titulo": "Acto de grado",
+   "sede": "Caracas",
+   "grupos": "9 grupos",
+   "responsable": "Ashley Carucci"
+  },
+  {
+   "fecha": "2026-11-02",
+   "titulo": "Supervivencia",
+   "sede": "Maracaibo",
+   "grupos": "3 grupos",
+   "responsable": "Aaron Vargas"
+  },
+  {
+   "fecha": "2026-11-02",
+   "titulo": "Supervivencia",
+   "sede": "San Cristóbal",
+   "grupos": "3 grupos",
+   "responsable": "María Leal"
+  },
+  {
+   "fecha": "2026-11-03",
+   "titulo": "Supervivencia",
+   "sede": "Maracaibo",
+   "grupos": "3 grupos",
+   "responsable": "Aaron Vargas"
+  },
+  {
+   "fecha": "2026-11-03",
+   "titulo": "Supervivencia",
+   "sede": "San Cristóbal",
+   "grupos": "3 grupos",
+   "responsable": "María Leal"
+  },
+  {
+   "fecha": "2026-11-04",
+   "titulo": "Supervivencia",
+   "sede": "Maracaibo",
+   "grupos": "3 grupos",
+   "responsable": "Aaron Vargas"
+  },
+  {
+   "fecha": "2026-11-07",
+   "titulo": "Open Day",
+   "sede": "Barquisimeto",
+   "grupos": "TDC-92-LMV-B",
+   "responsable": "Ibrahim"
+  },
+  {
+   "fecha": "2026-11-09",
+   "titulo": "Supervivencia",
+   "sede": "Maracaibo",
+   "grupos": "TDC-91-LMV-B, TDC-91-LMV-B.2",
+   "responsable": "Aaron Vargas"
+  },
+  {
+   "fecha": "2026-11-10",
+   "titulo": "Open Day",
+   "sede": "Barquisimeto",
+   "grupos": "TDC-92-LMV-A",
+   "responsable": "Ibrahim"
+  },
+  {
+   "fecha": "2026-11-10",
+   "titulo": "Supervivencia",
+   "sede": "Maracaibo",
+   "grupos": "TDC-91-LMV-B, TDC-91-LMV-B.2",
+   "responsable": "Aaron Vargas"
+  },
+  {
+   "fecha": "2026-11-11",
+   "titulo": "Supervivencia",
+   "sede": "Maracaibo",
+   "grupos": "2 grupos",
+   "responsable": "Aaron Vargas"
+  },
+  {
+   "fecha": "2026-11-14",
+   "titulo": "Servicio a bordo",
+   "sede": "Barquisimeto",
+   "grupos": "TDC-92-LMV-B",
+   "responsable": "Ibrahim"
+  },
+  {
+   "fecha": "2026-11-17",
+   "titulo": "Servicio a bordo",
+   "sede": "Barquisimeto",
+   "grupos": "TDC-92-LMV-A",
+   "responsable": "Ibrahim"
+  },
+  {
+   "fecha": "2026-11-18",
+   "titulo": "Supervivencia",
+   "sede": "Barquisimeto",
+   "grupos": "Grupo 1: TDC-92-S-ABCD, TDC-92-MJ-CD",
+   "responsable": "Ibrahim",
+   "nota": "Grupo 1"
+  },
+  {
+   "fecha": "2026-11-21",
+   "titulo": "Misa",
+   "sede": "Maracaibo",
+   "grupos": "11 grupos",
+   "responsable": "Aaron Vargas"
+  },
+  {
    "fecha": "2026-11-22",
    "titulo": "Supervivencia",
    "sede": "Barquisimeto",
-   "curso": "TDC",
+   "grupos": "Grupo 2: TDC-92-LMV-B, TDC-92-LMV-A",
    "responsable": "Pedro Meléndez",
-   "nota": "Grupo 2 · 3 días (22 al 24). Cubre Pedro Meléndez en lugar de Ibrahim."
-  },
-  {
-   "fecha": "2026-11-23",
-   "titulo": "Supervivencia (día 2)",
-   "sede": "Barquisimeto",
-   "curso": "TDC",
-   "responsable": "Pedro Meléndez"
-  },
-  {
-   "fecha": "2026-11-23",
-   "titulo": "Práctica de Procedimientos",
-   "sede": "Margarita",
-   "curso": "TDC",
-   "responsable": "Sin publicista · cubre la CCO",
-   "nota": ""
-  },
-  {
-   "fecha": "2026-11-23",
-   "titulo": "Misa",
-   "sede": "Maracaibo",
-   "curso": "TDC · PPA · TMA",
-   "responsable": "Aaron Vargas",
-   "nota": "11 grupos"
-  },
-  {
-   "fecha": "2026-11-24",
-   "titulo": "Supervivencia (día 3)",
-   "sede": "Barquisimeto",
-   "curso": "TDC",
-   "responsable": "Pedro Meléndez"
+   "nota": "3 días (22 al 24). Cubre Pedro Meléndez en lugar de Ibrahim.",
+   "dias": 3
   },
   {
    "fecha": "2026-11-24",
    "titulo": "Firma de acto",
    "sede": "Maracaibo",
-   "curso": "TDC · PPA · TMA",
-   "responsable": "Aaron Vargas",
-   "nota": "11 grupos"
+   "grupos": "11 grupos",
+   "responsable": "Aaron Vargas"
   },
   {
    "fecha": "2026-11-24",
    "titulo": "Ensayo de acto",
    "sede": "Maracaibo",
-   "curso": "TDC · PPA · TMA",
-   "responsable": "Aaron Vargas",
-   "nota": "11 grupos"
+   "grupos": "11 grupos",
+   "responsable": "Aaron Vargas"
   },
   {
    "fecha": "2026-11-25",
-   "titulo": "Acto de Grado",
+   "titulo": "Acto de grado",
    "sede": "Maracaibo",
-   "curso": "TDC · PPA · TMA",
-   "responsable": "Aaron Vargas",
-   "nota": "11 grupos"
-  },
-  {
-   "fecha": "2026-11-25",
-   "titulo": "Práctica de Procedimientos",
-   "sede": "Margarita",
-   "curso": "TDC",
-   "responsable": "Sin publicista · cubre la CCO",
-   "nota": ""
-  },
-  {
-   "fecha": "2026-11-26",
-   "titulo": "Open Day",
-   "sede": "Margarita",
-   "curso": "TDC",
-   "responsable": "Sin publicista · cubre la CCO",
-   "nota": ""
-  },
-  {
-   "fecha": "2026-11-30",
-   "titulo": "Defensa Personal",
-   "sede": "Margarita",
-   "curso": "TDC",
-   "responsable": "Sin publicista · cubre la CCO",
-   "nota": ""
+   "grupos": "11 grupos",
+   "responsable": "Aaron Vargas"
   },
   {
    "fecha": "2026-12-03",
    "titulo": "Misa",
    "sede": "Barquisimeto",
-   "curso": "TDC",
-   "responsable": "Ibrahim",
-   "nota": "4 grupos"
+   "grupos": "4 grupos",
+   "responsable": "Ibrahim"
   },
   {
    "fecha": "2026-12-04",
    "titulo": "Firma de acto",
    "sede": "Barquisimeto",
-   "curso": "TDC",
-   "responsable": "Ibrahim",
-   "nota": "4 grupos"
+   "grupos": "4 grupos",
+   "responsable": "Ibrahim"
   },
   {
    "fecha": "2026-12-04",
    "titulo": "Ensayo de acto",
    "sede": "Barquisimeto",
-   "curso": "TDC",
-   "responsable": "Ibrahim",
-   "nota": "4 grupos"
+   "grupos": "4 grupos",
+   "responsable": "Ibrahim"
   },
   {
    "fecha": "2026-12-05",
-   "titulo": "Acto de Grado",
+   "titulo": "Acto de grado",
    "sede": "Barquisimeto",
-   "curso": "TDC · TMA · DDV",
-   "responsable": "Ibrahim",
-   "nota": "6 grupos"
+   "grupos": "6 grupos",
+   "responsable": "Ibrahim"
   }
  ],
  "desde": "2026-11-23",
@@ -598,5 +686,6 @@
   "Barquisimeto": "Ibrahim",
   "Charallave": "Salomón Beltrán",
   "Margarita": "Sin publicista · cubre la CCO"
- }
+ },
+ "fuente_eventos": "Calendario de eventos del panel 1015 (Calendario de Eventos de la Base de Conocimiento, Barquisimeto corregido a mano)"
 }
