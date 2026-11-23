@@ -1115,9 +1115,10 @@
   .itin-it .pp small{display:none}
   .itin-it.ev{border-left-color:var(--gold);background:#fff8e6}.itin-it.ev .st{background:var(--gold);color:#000}
 </style>
+<script src="jpg.js?v=1"></script>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611200217';
+  var GAL_VERSION='202611231913';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -1837,8 +1838,16 @@
           return paso();
         }).then(function(blob){
           if(DLC!==ctl)return;
-          var file=new File([blob],name,{type:blob.type||m.mimeType||'application/octet-stream'});
-          if(!(navigator.canShare&&navigator.canShare({files:[file]}))){abrir('Este teléfono no permite guardarlo directo desde la página.');return;}
+          var file0=new File([blob],name,{type:blob.type||m.mimeType||'application/octet-stream'});
+          return (window.GaleriaJPG?window.GaleriaJPG.aJPG(file0).catch(function(){return file0;}):Promise.resolve(file0)).then(function(file){
+          if(DLC!==ctl)return;
+          var movil=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+          if(!movil||!(navigator.canShare&&navigator.canShare({files:[file]}))){
+            // Computadora (o teléfono sin «Compartir archivos»): se guarda directo.
+            var u=URL.createObjectURL(file),a=document.createElement('a');a.href=u;a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+            setTimeout(function(){URL.revokeObjectURL(u);},60000);dlCerrar();toast('Listo · '+file.name);return;
+          }
+          name=file.name; blob=file;
           // El menú Compartir necesita un toque nuevo (iOS no lo abre al terminar la descarga sola).
           dlPanel('<div><b>'+esc(name)+'</b> listo ('+dlMB(blob.size)+').</div><div style="display:flex;gap:8px;margin-top:10px">'+dlBtn('dlx','Cerrar',false)+dlBtn('dlok','Guardar en el teléfono',true)+'</div>');
           $('dlx').onclick=dlCerrar;
@@ -1848,6 +1857,7 @@
               abrir('No se pudo abrir el menú para guardar ('+esc(e&&e.name||'error')+').');
             });
           };
+          });
         });
       }).catch(function(e){
         if(e&&e.name==='AbortError')return;
@@ -1857,6 +1867,9 @@
   function dlOne(id){
     var esIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     if(esIOS&&navigator.share&&navigator.canShare&&window.File&&window.fetch){dlShare(id);return;}
+    // Fotos HEIC (iPhone): se bajan aquí y se convierten a JPG para que se vean en Android y en Windows.
+    var reg=(window.ALL||[]).filter(function(x){return x.driveId===id;})[0];
+    if(reg&&/\.(heic|heif)$/i.test(reg.nombre||'')&&window.fetch&&window.File){dlShare(id);return;}
     toast('Descargando…');
     // API de Drive v3 (alt=media): responde con content-disposition: attachment,
     // sin la página intermedia de "no se puede escanear por virus".

@@ -1,4 +1,5 @@
 (function(){
+  (function(){var s=document.createElement('script');s.src='jpg.js?v='+Date.now();document.head.appendChild(s);})();
   'use strict';
   var KEY='AIzaSyDG8OEUiJTqQdNck1NJZhOpD36Q1VBaAyQ';
   var DATOS='https://www.googleapis.com/drive/v3/files/1eURdGqo8-mjYhzMJttVHpCFgzEoa-hd1?alt=media&key='+KEY;
@@ -135,9 +136,15 @@
     var nombre=r.nombre||('IDEA-'+r.driveId), ext=(nombre.split('.').pop()||'').toLowerCase();
     return new File([blob],nombre,{type:MIME[ext]||blob.type||'application/octet-stream'});
   }
+  // Las fotos HEIC (iPhone) se convierten a JPG para que se vean en Android.
+  function convertir(f){
+    if(r_tipoVideo(f)||!window.GaleriaJPG)return Promise.resolve(f);
+    return window.GaleriaJPG.aJPG(f).catch(function(){return f;});
+  }
+  function r_tipoVideo(f){return /^video\//.test(f.type||'');}
   function precargar(i){
     var r=ITEMS[i]; if(!r||r.tipo==='Video'||LISTAS[r.driveId])return;
-    LISTAS[r.driveId]=bajar(r).then(function(b){var f=archivo(r,b);LISTAS[r.driveId].listo=f;return f;},function(){delete LISTAS[r.driveId];return null;});
+    LISTAS[r.driveId]=bajar(r).then(function(b){return convertir(archivo(r,b));}).then(function(f){LISTAS[r.driveId].listo=f;return f;},function(){delete LISTAS[r.driveId];return null;});
   }
   function descargar(i){
     var r=ITEMS[i]; if(!r||bajando)return;
@@ -160,7 +167,7 @@
       return leer();
     }).then(function(blob){
       var file=new File([blob],nombre,{type:MIME[ext]||blob.type||'application/octet-stream'});
-      return entregar(file);
+      return convertir(file).then(entregar);
     }).catch(function(){
       toast('No se pudo descargar. Revisa tu conexión e intenta de nuevo.');
     }).then(function(){bajando=false;});
