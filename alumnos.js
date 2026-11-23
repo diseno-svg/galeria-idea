@@ -109,7 +109,8 @@
   // y se entrega como archivo. En el teléfono se abre «Guardar imagen / Guardar video» para que quede en Fotos.
   var MIME={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',heic:'image/heic',heif:'image/heif',webp:'image/webp',
     mp4:'video/mp4',mov:'video/quicktime',m4v:'video/mp4'};
-  var MOVIL=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  // Solo iPhone/iPad guardan en Fotos con «Compartir»; Android descarga directo a la carpeta Descargas (y sale en la galería).
+  var MOVIL=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   var bajando=false, LISTO=null;
   function entregar(file){
     if(MOVIL&&navigator.canShare&&navigator.share){
@@ -138,8 +139,8 @@
   }
   // Las fotos HEIC (iPhone) se convierten a JPG para que se vean en Android.
   function convertir(f){
-    if(r_tipoVideo(f)||!window.GaleriaJPG)return Promise.resolve(f);
-    return window.GaleriaJPG.aJPG(f).catch(function(){return f;});
+    if(!window.GaleriaJPG)return Promise.resolve(f);
+    return window.GaleriaJPG.aCompatible(f).catch(function(){return f;});
   }
   function r_tipoVideo(f){return /^video\//.test(f.type||'');}
   function precargar(i){

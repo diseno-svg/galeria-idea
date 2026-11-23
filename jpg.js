@@ -36,5 +36,15 @@
       });
     });
   }
-  window.GaleriaJPG={aJPG:aJPG,esHeic:esHeic};
+  // Videos del iPhone (.MOV): se entregan como .mp4 para que Android los reconozca en la galería del teléfono.
+  // No se vuelve a codificar el video (sería muy pesado en el teléfono): solo cambia el envoltorio de nombre y tipo.
+  function esMov(nombre,tipo){return /\.(mov|qt)$/i.test(nombre||'')||/video\/quicktime/i.test(tipo||'');}
+  function aCompatible(archivo,nombre){
+    nombre=nombre||archivo.name||'archivo';
+    if(esMov(nombre,archivo.type))
+      return Promise.resolve(new File([archivo],String(nombre).replace(/\.(mov|qt)$/i,'')+'.mp4',{type:'video/mp4'}));
+    if(/^video\//.test(archivo.type||''))return Promise.resolve(archivo instanceof File?archivo:new File([archivo],nombre,{type:archivo.type}));
+    return aJPG(archivo,nombre);
+  }
+  window.GaleriaJPG={aJPG:aJPG,aCompatible:aCompatible,esHeic:esHeic,esMov:esMov};
 })();
