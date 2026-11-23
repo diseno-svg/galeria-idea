@@ -1118,7 +1118,7 @@
 <script src="jpg.js?v=2"></script>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611232036';
+  var GAL_VERSION='202611232046';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -1320,14 +1320,27 @@
     marcarActualizado(data.actualizado);
     hideSplash();
   }
+  // Carga rápida: si este equipo ya tiene el catálogo (3 MB), se muestra de una vez y solo se pregunta a Drive
+  // si cambió (una consulta chiquita). Se baja completo únicamente cuando hay una versión nueva.
+  var DATOS_MOD='idea.galeria.mod', DATOS_META=DATOS_URL.replace('alt=media','fields=modifiedTime');
+  function cargarDatosRapido(){
+    var guardado=null, mod=''; try{ guardado=JSON.parse(localStorage.getItem(DATOS_CACHE)||'null'); mod=localStorage.getItem(DATOS_MOD)||''; }catch(e){}
+    if(!guardado||!guardado.contenido||!mod){ cargarDatos(); return; }
+    usarDatos(guardado);
+    fetch(DATOS_META,{cache:'no-store'}).then(function(r){return r.ok?r.json():{};}).then(function(m){
+      if(m&&m.modifiedTime&&m.modifiedTime!==mod)cargarDatos();
+    }).catch(function(){});
+  }
   function cargarDatos(cb,intento){
     intento=intento||0;
+    var metaP=fetch(DATOS_META,{cache:'no-store'}).then(function(r){return r.ok?r.json():{};}).catch(function(){return {};});
     fetch(DATOS_URL,{cache:'no-store'}).then(function(r){
       if(!r.ok) throw new Error('HTTP '+r.status);
       return r.json();
     }).then(function(data){
       usarDatos(data);
       try{ localStorage.setItem(DATOS_CACHE,JSON.stringify(data)); }catch(e){}
+      metaP.then(function(m){ if(m&&m.modifiedTime)try{localStorage.setItem(DATOS_MOD,m.modifiedTime);}catch(e){} });
       if(cb)cb(null);
     }).catch(function(e){
       // Plan B: el script de Diseño entrega el mismo catálogo (accion=datos) sin pasar por la descarga pública de Drive.
@@ -1398,7 +1411,7 @@
 
   function boot(){
     var s=$('skel'); for(var i=0;i<12;i++){s.appendChild(document.createElement('div'));}
-    cargarDatos();
+    cargarDatosRapido();
   }
   function onErr(e){$('main').innerHTML='<div class="state">'+ic('info')+'<div class="big">No se pudo cargar</div>Revisa tu conexión e inténtalo de nuevo.<br><small style="color:var(--dim)">'+esc(String(e))+'</small></div>';}
   function norm(s){return String(s==null?'':s).toLowerCase()
@@ -1865,7 +1878,15 @@
         if(DLC===ctl)abrir('No se pudo bajar el archivo ('+esc(e&&e.message||'error')+').');
       });
   }
+  // Copias MP4 (H.264) de los videos, hechas en GitHub cada hora para que se vean en Android (tools/videos_mp4.py).
+  var VIDEOS_MP4={};
+  fetch('videos.json?v='+Math.floor(Date.now()/600000)).then(function(r){return r.ok?r.json():{};}).then(function(d){VIDEOS_MP4=(d&&d.videos)||{};}).catch(function(){});
   function dlOne(id){
+    if(VIDEOS_MP4[id]){
+      toast('Descargando video en MP4…');
+      var v=document.createElement('a'); v.href=VIDEOS_MP4[id]; v.target='_blank'; v.rel='noopener';
+      document.body.appendChild(v); v.click(); v.remove(); return;
+    }
     var esIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     // Todo se baja aquí para entregarlo compatible: fotos HEIC → JPG y videos MOV → MP4 (Android, Windows).
     if(window.fetch&&window.File&&window.Blob&&(esIOS||window.GaleriaJPG)){dlShare(id);return;}
@@ -3419,10 +3440,12 @@
       });
     }
     // Al abrir, al volver a la pestaña (p. ej. después de subir en Drive) y cada 2 minutos mientras se ve.
-    var t0=setInterval(function(){ if(BASE){clearInterval(t0); revisar(true);} },500);
-    document.addEventListener('visibilitychange',function(){ if(!document.hidden)setTimeout(function(){revisar(false);},800); });
-    window.addEventListener('focus',function(){ revisar(false); });
-    setInterval(function(){ if(!document.hidden)revisar(false); },120000);
+    // Se espera a que la galería termine de pintar; al volver a la pestaña revisa como mucho cada 90 s.
+    var ultima=0; function revisarSuave(){ if(Date.now()-ultima<90000)return; ultima=Date.now(); revisar(false); }
+    var t0=setInterval(function(){ if(BASE){clearInterval(t0); setTimeout(function(){ultima=Date.now();revisar(true);},2500);} },500);
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden)setTimeout(revisarSuave,800); });
+    window.addEventListener('focus',revisarSuave);
+    setInterval(function(){ if(!document.hidden)revisarSuave(); },300000);
   })();
 </script>
 

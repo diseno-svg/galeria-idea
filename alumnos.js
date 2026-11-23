@@ -147,8 +147,15 @@
     var r=ITEMS[i]; if(!r||r.tipo==='Video'||LISTAS[r.driveId])return;
     LISTAS[r.driveId]=bajar(r).then(function(b){return convertir(archivo(r,b));}).then(function(f){LISTAS[r.driveId].listo=f;return f;},function(){delete LISTAS[r.driveId];return null;});
   }
+  var VIDEOS_MP4={};
+  fetch('videos.json?v='+Math.floor(Date.now()/600000)).then(function(r){return r.ok?r.json():{};}).then(function(d){VIDEOS_MP4=(d&&d.videos)||{};}).catch(function(){});
   function descargar(i){
     var r=ITEMS[i]; if(!r||bajando)return;
+    if(VIDEOS_MP4[r.driveId]){
+      toast('Descargando video en MP4…');
+      var v=document.createElement('a'); v.href=VIDEOS_MP4[r.driveId]; v.target='_blank'; v.rel='noopener';
+      document.body.appendChild(v); v.click(); v.remove(); return;
+    }
     var pre=LISTAS[r.driveId];
     if(pre&&pre.listo){ entregar(pre.listo); return; }
     bajando=true; toast('Descargando…');
