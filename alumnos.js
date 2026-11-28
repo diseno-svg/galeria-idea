@@ -74,7 +74,19 @@
     if(!alb&&!vivoProbado){ vivoProbado=true; return buscarVivo(d); }
     if(!alb){ falla('Enlace no disponible','Este álbum ya no está disponible o el enlace está incompleto. Pídele a IDEA uno nuevo.'); return; }
     // Solo queda en memoria el álbum de este enlace.
-    ITEMS=porAlbum[alb]; porAlbum=null; d=null;
+    // Si existe par JPG (u otro formato web) para un RAW (.NEF, .CR2, etc.), se oculta el RAW; si solo hay RAW, se conserva para servirlo en JPEG.
+    var RAW_EXT=/\.(nef|cr2|cr3|arw|dng|orf|rw2|raf|pef|srw|raw)$/i;
+    var rawList=porAlbum[alb]||[], conPar={};
+    rawList.forEach(function(x){
+      var nm=String(x.nombre||'').trim();
+      if(!x._raw&&!RAW_EXT.test(nm))conPar[nm.replace(/\.[^.]+$/,'').trim().toLowerCase()]=1;
+    });
+    ITEMS=rawList.filter(function(x){
+      var nm=String(x.nombre||'').trim(), esR=Boolean(x._raw||RAW_EXT.test(nm));
+      if(!esR)return true;
+      if(conPar[nm.replace(/\.[^.]+$/,'').trim().toLowerCase()])return false;
+      x._raw=true; return true;
+    }); porAlbum=null; d=null;
     ITEMS.sort(function(x,y){return String(x.nombre||'').localeCompare(String(y.nombre||''),'es',{numeric:true});});
     pintar(alb);
   }
@@ -143,9 +155,13 @@
     return window.GaleriaJPG.aCompatible(f).catch(function(){return f;});
   }
   function r_tipoVideo(f){return /^video\//.test(f.type||'');}
+  function esRawItem(r){return Boolean(r&&(r._raw||(window.GaleriaJPG&&window.GaleriaJPG.esRaw(r.nombre))||/\.(nef|cr2|cr3|arw|dng|orf|rw2|raf|pef|srw|raw)$/i.test(String(r.nombre||''))));}
   function precargar(i){
     var r=ITEMS[i]; if(!r||r.tipo==='Video'||LISTAS[r.driveId])return;
-    LISTAS[r.driveId]=bajar(r).then(function(b){return convertir(archivo(r,b));}).then(function(f){LISTAS[r.driveId].listo=f;return f;},function(){delete LISTAS[r.driveId];return null;});
+    var prom=(esRawItem(r)&&window.GaleriaJPG&&window.GaleriaJPG.bajarRawComoJPG)
+      ? window.GaleriaJPG.bajarRawComoJPG(r.driveId,r.nombre,KEY)
+      : bajar(r).then(function(b){return convertir(archivo(r,b));});
+    LISTAS[r.driveId]=prom.then(function(f){LISTAS[r.driveId].listo=f;return f;},function(){delete LISTAS[r.driveId];return null;});
   }
   var VIDEOS_MP4={};
   fetch('videos.json?v='+Math.floor(Date.now()/600000)).then(function(r){return r.ok?r.json():{};}).then(function(d){VIDEOS_MP4=(d&&d.videos)||{};}).catch(function(){});
@@ -160,6 +176,12 @@
     if(pre&&pre.listo){ entregar(pre.listo); return; }
     bajando=true; toast('Descargando…');
     var nombre=r.nombre||('IDEA-'+r.driveId), ext=(nombre.split('.').pop()||'').toLowerCase();
+    if(esRawItem(r)&&window.GaleriaJPG&&window.GaleriaJPG.bajarRawComoJPG){
+      window.GaleriaJPG.bajarRawComoJPG(r.driveId,nombre,KEY).then(entregar).catch(function(){
+        toast('No se pudo descargar. Revisa tu conexión e intenta de nuevo.');
+      }).then(function(){bajando=false;});
+      return;
+    }
     var url='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(r.driveId)+'?alt=media&key='+KEY;
     fetch(url,{referrerPolicy:'strict-origin-when-cross-origin'}).then(function(res){
       if(!res.ok)throw new Error(res.status);
@@ -190,7 +212,7 @@
       // Reproductor de Drive encerrado: sin ventanas nuevas ni salida a Drive.
       s.innerHTML=nav+'<div class="fr"><iframe sandbox="allow-scripts allow-same-origin" allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer" src="https://drive.google.com/file/d/'+id+'/preview"></iframe><div class="cap"></div></div>';
     } else {
-      s.innerHTML=nav+'<img alt="" src="https://drive.google.com/thumbnail?id='+id+'&sz=w1600">';
+      s.innerHTML=nav+(esRawItem(r)?'<img alt="" src="https://lh3.googleusercontent.com/d/'+id+'=s2400" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src=\'https://drive.google.com/thumbnail?id='+id+'&sz=w1600\';}">':'<img alt="" src="https://drive.google.com/thumbnail?id='+id+'&sz=w1600">');
     }
     $('lbp').onclick=function(){ver(POS-1);}; $('lbnx').onclick=function(){ver(POS+1);};
   }

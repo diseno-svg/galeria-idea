@@ -1115,10 +1115,10 @@
   .itin-it .pp small{display:none}
   .itin-it.ev{border-left-color:var(--gold);background:#fff8e6}.itin-it.ev .st{background:var(--gold);color:#000}
 </style>
-<script src="jpg.js?v=2"></script>
+<script src="jpg.js?v=3"></script>
 <script>
   // ── Auto-actualización: si el teléfono o el navegador guardó una versión vieja, se recarga sola con la nueva ──
-  var GAL_VERSION='202611232046';
+  var GAL_VERSION='202611281135';
   (function(){
     try{
       fetch('version.json?x='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
@@ -1472,7 +1472,23 @@
              ['f-tipo','tipo'],['f-tipoevento','tipoEvento']];
 
   function onData(rows){
-    ALL=(rows||[]).filter(function(r){return r&&(r.nombre||r.driveId);}); INFO={};
+    var RAW_EXT=/\.(nef|cr2|cr3|arw|dng|orf|rw2|raf|pef|srw|raw)$/i;
+    var baseRows=(rows||[]).filter(function(r){return r&&(r.nombre||r.driveId);});
+    var nonRawKey={};
+    baseRows.forEach(function(r){
+      var nm=String(r.nombre||'').trim();
+      if(!r._raw&&!RAW_EXT.test(nm)){
+        var ak=String(r._albOrig||r.album||'').trim().toLowerCase();
+        nonRawKey[ak+'|'+nm.replace(/\.[^.]+$/,'').trim().toLowerCase()]=1;
+      }
+    });
+    ALL=baseRows.filter(function(r){
+      var nm=String(r.nombre||'').trim(), esR=Boolean(r._raw||RAW_EXT.test(nm));
+      if(!esR)return true;
+      var ak=String(r._albOrig||r.album||'').trim().toLowerCase();
+      if(nonRawKey[ak+'|'+nm.replace(/\.[^.]+$/,'').trim().toLowerCase()])return false;
+      r._raw=true; return true;
+    }); INFO={};
     ALL.forEach(function(r){
       ['nombre','servicio','album','sede','estado','tipo','anio','grupo','fecha','evento','tipoEvento','driveId','enlace','fechaRegistro'].forEach(function(k){r[k]=(r[k]==null)?'':String(r[k]);});
       var y=(r.anio||'').match(/20\d{2}/);if(!y)y=(r.fecha||'').match(/20\d{2}/);if(!y)y=(r.album||'').match(/20\d{2}/);
@@ -1754,9 +1770,13 @@
       renderVideo(stage,id,false);
     } else {
       var img=document.createElement('img');img.decoding='async';img.alt=inf.title;
-      img.onerror=function(){if(curIndex===i){stage.className='spinbox';stage.innerHTML='Sin vista previa disponible';}};
+      var thumbUrl='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600';
+      img.onerror=function(){
+        if(r._raw&&!img.dataset.fb){img.dataset.fb='1';img.src=thumbUrl;return;}
+        if(curIndex===i){stage.className='spinbox';stage.innerHTML='Sin vista previa disponible';}
+      };
       img.onload=function(){if(curIndex!==i)return;stage.className='';stage.innerHTML='';stage.appendChild(img);attachZoom(img);};
-      img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600';
+      img.src=r._raw?('https://lh3.googleusercontent.com/d/'+encodeURIComponent(id)+'=s2400'):thumbUrl;
     }
     var side=$('lbside'), favOn=FAVS.has(id), acts;
     if(isGp){
@@ -1833,26 +1853,35 @@
     fetch(base+'?fields=name,size,mimeType&key='+DRIVE_API_KEY,ctl?{signal:ctl.signal}:{})
       .then(function(r){return r.ok?r.json():{};}).catch(function(e){if(e&&e.name==='AbortError')throw e;return {};})
       .then(function(m){
-        var size=+m.size||0, name=m.name||'archivo';
-        if(size>DLMAX){
-          abrir('Este archivo pesa '+dlMB(size)+': es muy pesado para guardarlo desde la página. Ábrelo en Google Drive (mejor con la app instalada) y ahí toca ⋮ → «Enviar una copia» → «Guardar video», o «Descargar».',true);
-          return;
+        var item=ALL.filter(function(x){return x.driveId===id;})[0]||null;
+        var size=+m.size||0, name=m.name||(item&&item.nombre)||'archivo';
+        var esRawArchivo=Boolean((item&&item._raw)||(window.GaleriaJPG&&window.GaleriaJPG.esRaw(name,m.mimeType)));
+        var obtenerArchivo;
+        if(esRawArchivo&&window.GaleriaJPG&&window.GaleriaJPG.bajarRawComoJPG){
+          var tx=$('dltx'); if(tx)tx.textContent='Preparando JPG de alta resolución…';
+          obtenerArchivo=window.GaleriaJPG.bajarRawComoJPG(id,name,DRIVE_API_KEY,ctl?ctl.signal:undefined);
+        } else {
+          if(size>DLMAX){
+            abrir('Este archivo pesa '+dlMB(size)+': es muy pesado para guardarlo desde la página. Ábrelo en Google Drive (mejor con la app instalada) y ahí toca ⋮ → «Enviar una copia» → «Guardar video», o «Descargar».',true);
+            return;
+          }
+          obtenerArchivo=fetch(url,ctl?{signal:ctl.signal}:{}).then(function(r){
+            if(!r.ok)throw new Error('HTTP '+r.status);
+            var total=size||+r.headers.get('content-length')||0;
+            if(!r.body||!r.body.getReader)return r.blob();
+            var rd=r.body.getReader(),parts=[],got=0;
+            function paso(){return rd.read().then(function(x){
+              if(x.done)return new Blob(parts,{type:m.mimeType||r.headers.get('content-type')||''});
+              parts.push(x.value);got+=x.value.length;
+              var t=$('dltx');if(t)t.textContent='Bajando '+name+'… '+(total?Math.round(got*100/total)+'%':dlMB(got));
+              return paso();});}
+            return paso();
+          }).then(function(blob){
+            var file0=new File([blob],name,{type:blob.type||m.mimeType||'application/octet-stream'});
+            return window.GaleriaJPG?window.GaleriaJPG.aCompatible(file0).catch(function(){return file0;}):file0;
+          });
         }
-        return fetch(url,ctl?{signal:ctl.signal}:{}).then(function(r){
-          if(!r.ok)throw new Error('HTTP '+r.status);
-          var total=size||+r.headers.get('content-length')||0;
-          if(!r.body||!r.body.getReader)return r.blob();
-          var rd=r.body.getReader(),parts=[],got=0;
-          function paso(){return rd.read().then(function(x){
-            if(x.done)return new Blob(parts,{type:m.mimeType||r.headers.get('content-type')||''});
-            parts.push(x.value);got+=x.value.length;
-            var t=$('dltx');if(t)t.textContent='Bajando '+name+'… '+(total?Math.round(got*100/total)+'%':dlMB(got));
-            return paso();});}
-          return paso();
-        }).then(function(blob){
-          if(DLC!==ctl)return;
-          var file0=new File([blob],name,{type:blob.type||m.mimeType||'application/octet-stream'});
-          return (window.GaleriaJPG?window.GaleriaJPG.aCompatible(file0).catch(function(){return file0;}):Promise.resolve(file0)).then(function(file){
+        return obtenerArchivo.then(function(file){
           if(DLC!==ctl)return;
           // Solo iPhone/iPad usan «Compartir» para guardar en Fotos. Android y computadora guardan directo
           // (dentro de Producción el menú Compartir está bloqueado en Android).
@@ -1871,7 +1900,6 @@
               abrir('No se pudo abrir el menú para guardar ('+esc(e&&e.name||'error')+').');
             });
           };
-          });
         });
       }).catch(function(e){
         if(e&&e.name==='AbortError')return;
@@ -1894,7 +1922,8 @@
     // API de Drive v3 (alt=media): responde con content-disposition: attachment,
     // sin la página intermedia de "no se puede escanear por virus".
     var a=document.createElement('a');
-    a.href='https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY;
+    var itRaw=ALL.filter(function(x){return x.driveId===id&&x._raw;})[0];
+    a.href=itRaw?('https://lh3.googleusercontent.com/d/'+encodeURIComponent(id)+'=s3000'):('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(id)+'?alt=media&key='+DRIVE_API_KEY);
     a.download='';
     // Dentro de Producción (iframe) o en iPhone/iPad, el enlace se abre en una
     // pestaña nueva: así la descarga no reemplaza la galería y iOS muestra el
@@ -3141,6 +3170,7 @@
     function lunes(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
     var base=lunes(new Date());
     function subido(r){
+      if(r&&(r.listo||r.subido))return true;
       var c=curso(r.servicio), f=r.fecha; if(!f||!c)return false;
       var sedes=norm([r.sede1,r.sede2,r.sede3].filter(Boolean).join(','));
       return ALL.some(function(x){
@@ -3170,10 +3200,10 @@
           if(r.persona2)pp.push('<b>'+esc(r.persona2)+'</b>'+(r.formato2?' · '+esc(r.formato2):'')+' <small>PM</small>');
           if(r.persona3)pp.push('<b>'+esc(r.persona3)+'</b> <small>extra</small>');
           h+=r.persona2?('<div class="itin-it '+est+'"><div class="cu">'+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
-            (r.que?'<div class="q">'+esc(r.que)+'</div>':'')+(pp.length?'<div class="pp">'+pp.join('<br>')+'</div>':'')+'</div>')
+            (pp.length?'<div class="pp">'+pp.join('<br>')+'</div>':'')+'</div>')
             :('<div class="itin-it '+est+(r.formato1==='Curso especial'?' esp':'')+'">'+'<div class="cu">'+(r.formato1==='Curso especial'?'⭐ ':'')+esc(r.servicio||'Sin curso')+'<span class="st">'+lab+'</span></div>'+
             (r.sede1?'<div class="q"><b>'+esc(r.sede1)+'</b></div>':'')+'<div class="pp"><b>'+esc(r.persona1||'')+'</b></div>'+
-            (r.que?'<div class="q" style="opacity:.7;font-size:11.5px;margin-top:4px">'+esc(r.que)+'</div>':'')+'</div>');
+            '</div>');
         });
         var wk=''; if(i%7===0){var e6=new Date(d); e6.setDate(e6.getDate()+6); wk=d.getDate()+' '+MES[d.getMonth()]+' – '+e6.getDate()+' '+MES[e6.getMonth()];}
         dias+=(MOV&&i%7===0&&i>0?'<div class="itin-sep"><span>Semana del '+wk+'</span></div>':'')+
@@ -3240,18 +3270,38 @@
     // Solo en la vista de inicio (se esconde al buscar, filtrar o abrir un álbum, igual que la portada).
     function sync(){var h=$('hero');sec.classList.toggle('off',!!(h&&h.classList.contains('off')));}
     var _uh=window.updateHero; window.updateHero=function(){_uh.apply(this,arguments);sync();};
-    // Respaldo: si el catálogo todavía no trae fechas en el calendario, se lee itinerario.json (copia de la tabla 10.5).
-    var EXTRA=null, EVENTOS=[], NOTA_EV='', DESDE='';
+    // Itinerario en vivo desde ÉTER (Airtable 10.5 Calendario Semanal); itinerario.json queda como respaldo y fuente base de eventos.
+    var ETER_ITIN='https://eter.aeroidea.net/api/public/itinerario-mercadeo';
+    var EXTRA=null, CARGANDO_ITIN=false, VIVO_ITIN=false, EVENTOS=[], NOTA_EV='', DESDE='';
     function conFecha(){return (CAL||[]).some(function(r){return /^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');});}
-    // itinerario.json (rotación mensual + eventos) manda sobre lo que traiga el catálogo.
+    function normalizarItin(arr){
+      return (Array.isArray(arr)?arr:[]).filter(function(r){return r&&/^\d{4}-\d{2}-\d{2}/.test(String(r.fecha||''));}).map(function(r){
+        var o=Object.assign({},r,{que:''});
+        if(nrm(o.sede1)==='barquisimeto'&&!o.persona1)o.persona1='Victor Bozo';
+        return o;
+      });
+    }
+    function aplicarItin(arr){
+      if(!arr||!arr.length)return;
+      CAL=(CAL||[]).filter(function(r){return !/^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');}).concat(arr);
+    }
     function respaldo(){
-      if(EXTRA)return;
+      if(EXTRA&&EXTRA.length){aplicarItin(EXTRA);pintar();sync();}
+      if(CARGANDO_ITIN)return;
+      CARGANDO_ITIN=true;
+      fetch(ETER_ITIN,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(d){
+        var items=normalizarItin(Array.isArray(d)?d:(d&&d.itinerario));
+        if(!items.length)return;
+        VIVO_ITIN=true; EXTRA=items; aplicarItin(items); pintar(); sync();
+      }).catch(function(){});
       fetch('itinerario.json?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
-        EXTRA=(d&&d.itinerario)||[]; EVENTOS=(d&&d.eventos)||[]; NOTA_EV=(d&&d.nota_eventos)||''; DESDE=(d&&d.desde)||'';
-        RESP=(d&&d.responsables)||{};
-        if(EXTRA.length)CAL=(CAL||[]).filter(function(r){return !/^\d{4}-\d{2}-\d{2}/.test(r.fecha||'');}).concat(EXTRA);
-        // Si esta semana todavía no tiene itinerario, se abre en la semana en que empieza.
-        if(DESDE&&iso(base)<iso(lunes(new Date(DESDE+'T12:00:00')))&&!EXTRA.some(function(r){var f=String(r.fecha);return f>=iso(base)&&f<=iso(new Date(base.getTime()+6*864e5));}))base=lunes(new Date(DESDE+'T12:00:00'));
+        var fb=normalizarItin(d&&d.itinerario);
+        EVENTOS=(d&&d.eventos)||[]; NOTA_EV=(d&&d.nota_eventos)||''; DESDE=(d&&d.desde)||'';
+        RESP=Object.assign({Barquisimeto:'Victor Bozo'},(d&&d.responsables)||{});
+        if(!VIVO_ITIN&&fb.length){
+          EXTRA=fb; aplicarItin(fb);
+          if(DESDE&&iso(base)<iso(lunes(new Date(DESDE+'T12:00:00')))&&!fb.some(function(r){var f=String(r.fecha);return f>=iso(base)&&f<=iso(new Date(base.getTime()+6*864e5));}))base=lunes(new Date(DESDE+'T12:00:00'));
+        }
         pintar(); sync(); enVivo();
       }).catch(function(){});
     }

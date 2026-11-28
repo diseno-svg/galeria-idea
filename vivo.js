@@ -13,6 +13,9 @@
   var NOMBRES_SEDE={BARQUISIMETO:'Barquisimeto',CARACAS:'Caracas',MARACAIBO:'Maracaibo',MARGARITA:'Margarita',
     'SAN CRISTOBAL':'San Cristóbal','SAN CRISTÓBAL':'San Cristóbal',VALENCIA:'Valencia',CHARALLAVE:'Charallave'};
   var MEDIA="(mimeType contains 'image/' or mimeType contains 'video/')";
+  var RAW_EXT=/\.(nef|cr2|cr3|arw|dng|orf|rw2|raf|pef|srw|raw)$/i;
+  var RAW_MIME=/^image\/x-(nikon|canon|sony|adobe|fuji|olympus|panasonic|pentax|dcraw|raw)/i;
+  function esRaw(f){return RAW_EXT.test(String(f&&f.name||''))||RAW_MIME.test(String(f&&f.mimeType||''));}
 
   function hace(d){return new Date(Date.now()-d*864e5).toISOString().replace(/\.\d+Z$/,'');}
   function listar(q,campos){
@@ -37,7 +40,7 @@
       tipo:/^video\//.test(f.mimeType)?'Video':'Foto',
       fechaRegistro:String(f.createdTime||'').slice(0,10), anio:m?m[1]:'',
       evento:partes.length>=5?partes[partes.length-1]:'', grupo:partes.length>=5?partes[3]:'',
-      tipoEvento:'', fecha:'', _vivo:true
+      tipoEvento:'', fecha:'', _vivo:true, _raw:esRaw(f)
     };
   }
   function cargar(){
